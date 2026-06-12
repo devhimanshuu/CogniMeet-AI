@@ -16,6 +16,7 @@ import { ProcessingState } from "../components/processing-state";
 import { UpdateMeetingDialog } from "../components/update-meeting-dialog";
 import { MeetingIdViewHeader } from "../components/meeting-id-view-header";
 import { CompletedState } from "../components/completed-state";
+import { PreMeetingBriefing } from "../components/pre-meeting-briefing";
 
 interface Props {
   meetingId: string;
@@ -83,9 +84,10 @@ export const MeetingIdView = ({ meetingId }: Props) => {
         {isCompleted && <CompletedState data={data} />}
         {isActive && <ActiveState meetingId={meetingId} />}
         {isUpcoming && (
-          <UpcomingState
-            meetingId={meetingId}
-          />
+          <div className="flex flex-col gap-y-4">
+            <UpcomingState meetingId={meetingId} />
+            <PreMeetingBriefing agent={data.agent} />
+          </div>
         )}
       </div>
     </>
