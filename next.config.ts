@@ -1,15 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  async redirects() {
-    return [
-      {
-        source: "/",
-        destination: "/meetings",
-        permanent: false,
-      },
-    ];
-  },
+  // Landing page now lives at /, no more redirect needed
 };
 
 export default nextConfig;
