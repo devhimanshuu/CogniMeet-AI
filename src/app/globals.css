@@ -81,6 +81,7 @@
   --sidebar-accent-foreground: oklch(1 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --cta-bg: rgba(255, 255, 255, 0.75);
 }
 
 .dark {
@@ -115,6 +116,7 @@
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: rgba(148, 163, 184, 0.08);
   --sidebar-ring: #10b981;
+  --cta-bg: rgba(17, 24, 39, 0.65);
 }
 
 @layer base {
@@ -377,3 +379,10 @@
   opacity: 1;
 }
 
+/* Remove Clerk Watermark/Branding */
+.cl-branding,
+[class*="cl-"] *:has(> a[href*="clerk.com"]),
+[class*="cl-"] *:has(> a[aria-label*="Clerk"]),
+[class*="cl-"] *:has(> a[href*="accounts.clerk.com"]) {
+  display: none !important;
+}

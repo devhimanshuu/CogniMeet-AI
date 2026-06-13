@@ -31,7 +31,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      afterSignOutUrl="/"
+      signInUrl="/sign-in"
+      signUpUrl="/sign-up"
+      appearance={{
+        layout: {
+          unsafe_disableDevelopmentModeWarnings: true,
+        },
+        elements: {
+          branding: "hidden",
+        }
+      }}
+    >
       <NuqsAdapter>
         <TRPCReactProvider>
           <html lang="en" suppressHydrationWarning>

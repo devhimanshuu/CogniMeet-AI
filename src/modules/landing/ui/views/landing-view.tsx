@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import {
   SparklesIcon,
   VideoIcon,
@@ -68,28 +69,39 @@ const LandingNavbar = () => {
               variant="ghost"
               size="icon"
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className={`size-9 rounded-xl border transition-colors ${
-                scrolled 
+              className={`size-9 rounded-xl border transition-colors ${scrolled
                   ? "text-muted-foreground hover:text-foreground border-black/5 dark:border-white/5 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10"
                   : "text-white/80 hover:text-white border-white/10 bg-white/10 hover:bg-white/20"
-              }`}
+                }`}
             >
               {theme === "dark" ? <SunIcon className="size-4.5 text-emerald-400" /> : <MoonIcon className="size-4.5 text-violet-400" />}
             </Button>
           )}
-          <Button 
-            variant="ghost" 
-            asChild 
-            className={scrolled ? "text-muted-foreground hover:text-foreground" : "text-white/80 hover:text-white"}
-          >
-            <Link href="/sign-in">Sign In</Link>
-          </Button>
-          <Button asChild className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20">
-            <Link href="/sign-up">
-              Get Started Free
-              <ArrowRightIcon className="size-4 ml-1" />
-            </Link>
-          </Button>
+          <SignedOut>
+            <Button
+              variant="ghost"
+              asChild
+              className={scrolled ? "text-muted-foreground hover:text-foreground" : "text-white/80 hover:text-white"}
+            >
+              <Link href="/sign-in">Sign In</Link>
+            </Button>
+            <Button asChild className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20">
+              <Link href="/sign-up">
+                Get Started Free
+                <ArrowRightIcon className="size-4 ml-1" />
+              </Link>
+            </Button>
+          </SignedOut>
+          <SignedIn>
+            <Button
+              variant="ghost"
+              asChild
+              className={scrolled ? "text-muted-foreground hover:text-foreground" : "text-white/80 hover:text-white"}
+            >
+              <Link href="/dashboard">Dashboard</Link>
+            </Button>
+            <UserButton />
+          </SignedIn>
         </div>
 
         <Button
@@ -110,8 +122,8 @@ const LandingNavbar = () => {
             <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground py-2">Pricing</a>
             <div className="border-t border-border/30 pt-3 flex flex-col gap-2">
               {mounted && (
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                   className="w-full flex items-center justify-center gap-2 border-black/10 dark:border-white/10 text-muted-foreground hover:text-foreground"
                 >
@@ -128,10 +140,18 @@ const LandingNavbar = () => {
                   )}
                 </Button>
               )}
-              <Button variant="ghost" asChild><Link href="/sign-in">Sign In</Link></Button>
-              <Button asChild className="bg-emerald-600 hover:bg-emerald-500 text-white">
-                <Link href="/sign-up">Get Started Free</Link>
-              </Button>
+              <SignedOut>
+                <Button variant="ghost" asChild className="w-full"><Link href="/sign-in">Sign In</Link></Button>
+                <Button asChild className="w-full bg-emerald-600 hover:bg-emerald-500 text-white">
+                  <Link href="/sign-up">Get Started Free</Link>
+                </Button>
+              </SignedOut>
+              <SignedIn>
+                <Button variant="ghost" asChild className="w-full"><Link href="/dashboard">Dashboard</Link></Button>
+                <div className="flex justify-center py-2">
+                  <UserButton />
+                </div>
+              </SignedIn>
             </div>
           </div>
         </div>
@@ -146,12 +166,11 @@ const PricingCard = ({ title, monthlyPrice, yearlyPrice, billingCycle, descripti
 }) => {
   const price = billingCycle === "monthly" ? monthlyPrice : yearlyPrice;
   return (
-    <div 
-      className={`relative glass-card p-10 flex flex-col rounded-3xl transition-all duration-500 hover:-translate-y-2 group animate-slide-up ${
-        highlighted 
-          ? "shifting-gradient-border shadow-[0_0_50px_-12px_rgba(16,185,129,0.25)] border-emerald-500/30" 
+    <div
+      className={`relative glass-card p-10 flex flex-col rounded-3xl transition-all duration-500 hover:-translate-y-2 group animate-slide-up ${highlighted
+          ? "shifting-gradient-border shadow-[0_0_50px_-12px_rgba(16,185,129,0.25)] border-emerald-500/30"
           : "border-white/5 hover:border-white/10"
-      }`}
+        }`}
       style={{ animationDelay: `${delay}s`, animationFillMode: 'both' }}
     >
       {highlighted && (
@@ -179,16 +198,32 @@ const PricingCard = ({ title, monthlyPrice, yearlyPrice, billingCycle, descripti
           </li>
         ))}
       </ul>
-      <Button
-        className={highlighted
-          ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_30px_-5px_rgba(16,185,129,0.5)] hover:shadow-[0_0_40px_-5px_rgba(16,185,129,0.7)] w-full h-14 rounded-2xl text-base transition-all hover:scale-[1.03]"
-          : "w-full h-14 rounded-2xl text-base bg-background/50 backdrop-blur-sm border-black/10 dark:border-white/10 hover:bg-secondary/50 transition-all hover:scale-[1.03]"
-        }
-        variant={highlighted ? "default" : "outline"}
-        asChild
-      >
-        <Link href="/sign-up">{highlighted ? "Get Started" : "Start Free"}</Link>
-      </Button>
+      <SignedOut>
+        <Button
+          className={highlighted
+            ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_30px_-5px_rgba(16,185,129,0.5)] hover:shadow-[0_0_40px_-5px_rgba(16,185,129,0.7)] w-full h-14 rounded-2xl text-base transition-all hover:scale-[1.03]"
+            : "w-full h-14 rounded-2xl text-base bg-background/50 backdrop-blur-sm border-black/10 dark:border-white/10 hover:bg-secondary/50 transition-all hover:scale-[1.03]"
+          }
+          variant={highlighted ? "default" : "outline"}
+          asChild
+        >
+          <Link href="/sign-up">{highlighted ? "Get Started" : "Start Free"}</Link>
+        </Button>
+      </SignedOut>
+      <SignedIn>
+        <Button
+          className={highlighted
+            ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_30px_-5px_rgba(16,185,129,0.5)] hover:shadow-[0_0_40px_-5px_rgba(16,185,129,0.7)] w-full h-14 rounded-2xl text-base transition-all hover:scale-[1.03]"
+            : "w-full h-14 rounded-2xl text-base bg-background/50 backdrop-blur-sm border-black/10 dark:border-white/10 hover:bg-secondary/50 transition-all hover:scale-[1.03]"
+          }
+          variant={highlighted ? "default" : "outline"}
+          asChild
+        >
+          <Link href={highlighted ? "/upgrade" : "/dashboard"}>
+            {highlighted ? "Upgrade Now" : "Go to Dashboard"}
+          </Link>
+        </Button>
+      </SignedIn>
     </div>
   );
 };
@@ -202,7 +237,7 @@ export const LandingView = () => {
   const [analyticsHovered, setAnalyticsHovered] = useState(false);
   const [activeProvider, setActiveProvider] = useState("groq");
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
-  
+
   const [ctaCoords, setCtaCoords] = useState({ x: 0, y: 0 });
   const [ctaHovered, setCtaHovered] = useState(false);
 
@@ -234,7 +269,7 @@ export const LandingView = () => {
       <LandingNavbar />
 
       {/* ═══ HERO ═══ */}
-      <section className="dark bg-[#0a0e1a] text-white relative min-h-screen flex flex-col items-center justify-center pt-32 pb-20 px-6 overflow-hidden border-b border-white/5">
+      <section className="dark bg-[#0a0e1a] text-white relative min-h-screen flex flex-col items-center justify-center pt-28 md:pt-32 pb-12 md:pb-20 px-4 sm:px-6 overflow-hidden border-b border-white/5">
         {/* Full Viewport Particle Text Background */}
         <ParticleTextEffect
           words={[
@@ -256,33 +291,43 @@ export const LandingView = () => {
         </div>
 
         {/* Foreground Content */}
-        <div className="max-w-4xl mx-auto text-center relative z-10 w-full flex flex-col items-center justify-between min-h-[75vh] pointer-events-none">
+        <div className="max-w-4xl mx-auto text-center relative z-10 w-full flex flex-col items-center justify-between min-h-[75vh] md:min-h-[80vh] pointer-events-none">
           {/* Top Badge */}
-          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-slate-900/60 backdrop-blur-xl border border-white/10 shadow-2xl text-sm mt-8 animate-slide-up pointer-events-auto">
-            <SparklesIcon className="size-4 text-emerald-400" />
+          <div className="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-slate-900/60 backdrop-blur-xl border border-white/10 shadow-2xl text-xs sm:text-sm mt-12 sm:mt-20 animate-slide-up pointer-events-auto">
+            <SparklesIcon className="size-3.5 sm:size-4 text-emerald-400" />
             <span className="text-slate-300 font-medium">Powered by AI Agents — Groq, ElevenLabs & More</span>
           </div>
 
           {/* Spacer to allow the Particle Text (which is centered) to be clearly visible */}
-          <div className="flex-1 min-h-[300px]" />
+          <div className="flex-1 min-h-[140px] md:min-h-[300px]" />
 
           {/* Bottom Content */}
           <div className="mt-auto pointer-events-auto w-full animate-slide-up" style={{ animationDelay: "0.2s" }}>
-            <div className="bg-slate-950/60 backdrop-blur-2xl p-8 md:p-10 rounded-[2rem] border border-white/10 shadow-[0_0_80px_-20px_rgba(16,185,129,0.15)] relative overflow-hidden group">
+            <div className="bg-slate-950/60 backdrop-blur-2xl p-6 sm:p-8 md:p-10 rounded-2xl md:rounded-[2rem] border border-white/10 shadow-[0_0_80px_-20px_rgba(16,185,129,0.15)] relative overflow-hidden group">
               <div className="absolute inset-0 bg-gradient-to-t from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
 
-              <p className="text-lg md:text-xl text-slate-300 mb-8 leading-relaxed relative z-10">
+              <p className="text-sm sm:text-base md:text-lg lg:text-xl text-slate-300 mb-6 md:mb-8 leading-relaxed relative z-10">
                 CogniMeet.AI brings intelligent agents into your video meetings. They listen, take notes, extract action items, search the web, and generate insights — all in real time.
               </p>
 
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-5 relative z-10">
-                <Button asChild size="lg" className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_40px_-10px_rgba(16,185,129,0.6)] px-10 h-14 text-base rounded-2xl transition-all hover:scale-105">
-                  <Link href="/sign-up">
-                    <SparklesIcon className="size-5 mr-2" />
-                    Get Started Free
-                  </Link>
-                </Button>
-                <Button asChild size="lg" variant="outline" className="border-white/10 hover:bg-slate-800/50 px-10 h-14 text-base rounded-2xl bg-slate-900/30 text-white backdrop-blur-sm transition-all hover:scale-105">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 md:gap-5 relative z-10">
+                <SignedOut>
+                  <Button asChild size="lg" className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_40px_-10px_rgba(16,185,129,0.6)] px-8 md:px-10 h-12 md:h-14 text-sm md:text-base rounded-xl md:rounded-2xl transition-all hover:scale-105">
+                    <Link href="/sign-up">
+                      <SparklesIcon className="size-4 sm:size-5 mr-2" />
+                      Get Started Free
+                    </Link>
+                  </Button>
+                </SignedOut>
+                <SignedIn>
+                  <Button asChild size="lg" className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_40px_-10px_rgba(16,185,129,0.6)] px-8 md:px-10 h-12 md:h-14 text-sm md:text-base rounded-xl md:rounded-2xl transition-all hover:scale-105">
+                    <Link href="/dashboard">
+                      <SparklesIcon className="size-4 sm:size-5 mr-2" />
+                      Go to Dashboard
+                    </Link>
+                  </Button>
+                </SignedIn>
+                <Button asChild size="lg" variant="outline" className="w-full sm:w-auto border-white/10 hover:bg-slate-800/50 px-8 md:px-10 h-12 md:h-14 text-sm md:text-base rounded-xl md:rounded-2xl bg-slate-900/30 text-white backdrop-blur-sm transition-all hover:scale-105">
                   <a href="#features">
                     Discover Features
                     <ArrowRightIcon className="size-4 ml-2" />
@@ -291,7 +336,7 @@ export const LandingView = () => {
               </div>
             </div>
 
-            <p className="mt-8 text-xs font-medium text-slate-500 tracking-widest uppercase animate-fade-in" style={{ animationDelay: "1s" }}>
+            <p className="mt-6 md:mt-8 text-xs font-medium text-slate-500 tracking-widest uppercase animate-fade-in" style={{ animationDelay: "1s" }}>
               Right-click + drag to shatter particles
             </p>
           </div>
@@ -323,7 +368,7 @@ export const LandingView = () => {
                   Get structured summaries with key decisions, action items, and topics — generated instantly after every meeting.
                 </p>
               </div>
-              
+
               {/* Mockup Preview */}
               <div className="glass-card bg-black/5 dark:bg-[#0b0f19]/80 border border-black/5 dark:border-white/10 rounded-2xl p-5 shadow-inner mt-4 overflow-hidden relative">
                 <div className="flex items-center justify-between mb-4 border-b border-black/5 dark:border-white/5 pb-2">
@@ -468,8 +513,8 @@ export const LandingView = () => {
 
             {/* CARD 6: Meeting Analytics Dashboard (Double Column) */}
             <div className="md:col-span-2 glass-card p-8 rounded-3xl border border-black/5 dark:border-white/5 hover:border-black/15 dark:hover:border-white/10 transition-all duration-500 hover:shadow-[0_20px_45px_-15px_rgba(244,63,94,0.1)] group flex flex-col justify-between overflow-hidden relative min-h-[350px]"
-                 onMouseEnter={() => setAnalyticsHovered(true)}
-                 onMouseLeave={() => setAnalyticsHovered(false)}>
+              onMouseEnter={() => setAnalyticsHovered(true)}
+              onMouseLeave={() => setAnalyticsHovered(false)}>
               <div className="absolute inset-0 bg-gradient-to-br from-rose-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               <div>
                 <div className="inline-flex p-3 rounded-2xl mb-6 bg-rose-500/10 border border-rose-500/20 text-rose-400 group-hover:scale-110 transition-transform">
@@ -559,7 +604,7 @@ export const LandingView = () => {
               From setup to automation, see how CogniMeet.AI handles meeting intelligence for your team.
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             {/* Left: Step selectors */}
             <div className="lg:col-span-5 space-y-6">
@@ -587,22 +632,19 @@ export const LandingView = () => {
                   key={item.step}
                   onClick={() => setActiveWorkStep(item.step)}
                   onMouseEnter={() => setActiveWorkStep(item.step)}
-                  className={`w-full text-left p-6 rounded-2xl border transition-all duration-300 flex items-start gap-5 relative overflow-hidden group cursor-pointer ${
-                    activeWorkStep === item.step 
-                      ? "bg-black/5 dark:bg-white/[0.04] border-black/10 dark:border-white/10 shadow-lg" 
+                  className={`w-full text-left p-6 rounded-2xl border transition-all duration-300 flex items-start gap-5 relative overflow-hidden group cursor-pointer ${activeWorkStep === item.step
+                      ? "bg-black/5 dark:bg-white/[0.04] border-black/10 dark:border-white/10 shadow-lg"
                       : "bg-transparent border-transparent hover:bg-black/[0.01] dark:hover:bg-white/[0.01]"
-                  }`}
+                    }`}
                 >
                   {activeWorkStep === item.step && (
-                    <div className={`absolute left-0 top-0 bottom-0 w-1 ${
-                      item.step === 0 ? "bg-emerald-500" : item.step === 1 ? "bg-cyan-500" : "bg-violet-500"
-                    }`} />
+                    <div className={`absolute left-0 top-0 bottom-0 w-1 ${item.step === 0 ? "bg-emerald-500" : item.step === 1 ? "bg-cyan-500" : "bg-violet-500"
+                      }`} />
                   )}
-                  <div className={`size-12 rounded-xl flex items-center justify-center font-bold text-lg border transition-transform group-hover:scale-105 shrink-0 ${
-                    activeWorkStep === item.step
+                  <div className={`size-12 rounded-xl flex items-center justify-center font-bold text-lg border transition-transform group-hover:scale-105 shrink-0 ${activeWorkStep === item.step
                       ? (item.step === 0 ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400" : item.step === 1 ? "bg-cyan-500/15 border-cyan-500/30 text-cyan-400" : "bg-violet-500/15 border-violet-500/30 text-violet-400")
                       : "bg-black/5 dark:bg-white/5 border-black/5 dark:border-white/10 text-slate-500 dark:text-white/55"
-                  }`}>
+                    }`}>
                     {item.number}
                   </div>
                   <div>
@@ -633,7 +675,7 @@ export const LandingView = () => {
 
                 {/* Dynamic View container */}
                 <div className="p-8 min-h-[360px] flex flex-col justify-center relative bg-gradient-to-b from-transparent to-[#0a0e1a]/5 dark:to-[#0a0e1a]/40">
-                  
+
                   {/* STEP 1: CONFIGURE */}
                   {activeWorkStep === 0 && (
                     <div className="space-y-6 animate-fade-in">
@@ -728,7 +770,7 @@ export const LandingView = () => {
                           <p className="text-[8px] text-slate-500 dark:text-white/50 leading-tight">Summaries auto-posted to #dev-updates.</p>
                           <div className="mt-2 text-[8px] text-emerald-500 dark:text-emerald-400 font-semibold">✓ Posted</div>
                         </div>
-                        
+
                         {/* Notion Card */}
                         <div className="bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 border border-black/5 dark:border-white/5 rounded-xl p-3 transition-colors">
                           <span className="text-[9px] font-bold text-slate-800 dark:text-white block mb-1">Notion Database</span>
@@ -826,9 +868,8 @@ export const LandingView = () => {
                   <div
                     key={p.key}
                     onMouseEnter={() => setActiveProvider(p.key)}
-                    className={`border rounded-xl p-3.5 transition-all duration-300 cursor-pointer ${p.color} ${
-                      activeProvider === p.key ? "scale-[1.03] bg-black/[0.02] dark:bg-white/[0.02]" : "opacity-60"
-                    }`}
+                    className={`border rounded-xl p-3.5 transition-all duration-300 cursor-pointer ${p.color} ${activeProvider === p.key ? "scale-[1.03] bg-black/[0.02] dark:bg-white/[0.02]" : "opacity-60"
+                      }`}
                   >
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs font-bold text-slate-900 dark:text-white">{p.name}</span>
@@ -880,21 +921,19 @@ export const LandingView = () => {
             <div className="inline-flex items-center bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 p-1.5 rounded-full mb-8">
               <button
                 onClick={() => setBillingCycle("monthly")}
-                className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                  billingCycle === "monthly"
+                className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all cursor-pointer ${billingCycle === "monthly"
                     ? "bg-emerald-600 text-white shadow-lg"
                     : "text-muted-foreground hover:text-slate-900 dark:hover:text-white"
-                }`}
+                  }`}
               >
                 Monthly Billing
               </button>
               <button
                 onClick={() => setBillingCycle("yearly")}
-                className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                  billingCycle === "yearly"
+                className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${billingCycle === "yearly"
                     ? "bg-emerald-600 text-white shadow-lg"
                     : "text-muted-foreground hover:text-slate-900 dark:hover:text-white"
-                }`}
+                  }`}
               >
                 Yearly Billing
                 <span className="bg-emerald-500/20 text-emerald-400 text-[9px] px-1.5 py-0.5 rounded-full font-semibold border border-emerald-500/10">
@@ -946,38 +985,48 @@ export const LandingView = () => {
       <section className="py-32 px-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-emerald-500/5 blur-[150px] rounded-full max-w-4xl mx-auto" />
         <div className="max-w-4xl mx-auto text-center relative z-10 animate-slide-up" style={{ animationDelay: "0.2s" }}>
-          
+
           {/* Glowing cursor tracking card */}
-          <div 
+          <div
             onMouseMove={handleCtaMouseMove}
             onMouseEnter={() => setCtaHovered(true)}
             onMouseLeave={() => setCtaHovered(false)}
             style={{
-              background: ctaHovered 
-                ? `radial-gradient(600px circle at ${ctaCoords.x}px ${ctaCoords.y}px, rgba(16, 185, 129, 0.12), transparent 45%), ${theme === 'dark' ? 'rgba(17, 24, 39, 0.65)' : 'rgba(255, 255, 255, 0.75)'}`
-                : (theme === 'dark' ? "rgba(17, 24, 39, 0.65)" : "rgba(255, 255, 255, 0.75)"),
+              background: ctaHovered
+                ? `radial-gradient(600px circle at ${ctaCoords.x}px ${ctaCoords.y}px, rgba(16, 185, 129, 0.12), transparent 45%), var(--cta-bg)`
+                : "var(--cta-bg)",
               transition: "background 0.3s ease"
             }}
             className="glass-card p-16 md:p-24 rounded-[3rem] border border-black/10 dark:border-white/10 shadow-[0_0_100px_-20px_rgba(16,185,129,0.2)] relative overflow-hidden group"
           >
             <div className="absolute inset-0 bg-gradient-to-t from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-            
+
             <div className="relative inline-block mb-10">
               <div className="absolute inset-0 bg-emerald-500/20 blur-2xl rounded-full scale-150 animate-pulse" />
               <SparklesIcon className="size-16 text-emerald-400 mx-auto relative z-10" />
             </div>
-            
+
             <h2 className="text-4xl md:text-6xl font-bold mb-8 tracking-tight text-slate-900 dark:text-white relative z-10">Ready to Transform Your Meetings?</h2>
             <p className="text-xl text-muted-foreground mb-12 max-w-xl mx-auto leading-relaxed relative z-10">
               Join teams around the world using AI-powered meeting intelligence to make every sync count.
             </p>
-            
-            <Button asChild size="lg" className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_50px_-10px_rgba(16,185,129,0.8)] px-12 h-16 text-lg rounded-2xl relative z-10 transition-transform hover:scale-[1.05] duration-300">
-              <Link href="/sign-up">
-                Get Started For Free
-                <ArrowRightIcon className="size-5 ml-3" />
-              </Link>
-            </Button>
+
+            <SignedOut>
+              <Button asChild size="lg" className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_50px_-10px_rgba(16,185,129,0.8)] px-12 h-16 text-lg rounded-2xl relative z-10 transition-transform hover:scale-[1.05] duration-300">
+                <Link href="/sign-up">
+                  Get Started For Free
+                  <ArrowRightIcon className="size-5 ml-3" />
+                </Link>
+              </Button>
+            </SignedOut>
+            <SignedIn>
+              <Button asChild size="lg" className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_50px_-10px_rgba(16,185,129,0.8)] px-12 h-16 text-lg rounded-2xl relative z-10 transition-transform hover:scale-[1.05] duration-300">
+                <Link href="/dashboard">
+                  Go to Dashboard
+                  <ArrowRightIcon className="size-5 ml-3" />
+                </Link>
+              </Button>
+            </SignedIn>
           </div>
         </div>
       </section>
@@ -999,7 +1048,7 @@ export const LandingView = () => {
                 <span className="text-[10px] font-semibold text-emerald-400 uppercase tracking-wider">All Systems Operational</span>
               </div>
             </div>
-            
+
             <div className="space-y-3">
               <h4 className="text-xs font-bold tracking-widest uppercase text-slate-900 dark:text-white">Product</h4>
               <ul className="space-y-2 text-xs text-muted-foreground">
@@ -1008,7 +1057,7 @@ export const LandingView = () => {
                 <li><a href="#how-it-works" className="hover:text-slate-900 dark:hover:text-white transition-colors">How It Works</a></li>
               </ul>
             </div>
-            
+
             <div className="space-y-3">
               <h4 className="text-xs font-bold tracking-widest uppercase text-slate-900 dark:text-white">Integrations</h4>
               <ul className="space-y-2 text-xs text-muted-foreground">
