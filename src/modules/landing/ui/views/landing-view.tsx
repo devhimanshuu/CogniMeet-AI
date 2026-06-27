@@ -23,149 +23,14 @@ import {
   GlobeIcon,
   Sun as SunIcon,
   Moon as MoonIcon,
+  Linkedin as LinkedinIcon,
+  Github as GithubIcon,
+  Twitter as TwitterIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ParticleTextEffect } from "@/components/ui/particle-text-effect";
+import { LandingNavbar } from "@/modules/landing/ui/components/landing-navbar";
 
-/* ───────────── Navbar ───────────── */
-const LandingNavbar = () => {
-  const [scrolled, setScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  const { isSignedIn, isLoaded } = useAuth();
-
-  useEffect(() => {
-    setMounted(true);
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled
-      ? "bg-background/80 backdrop-blur-xl border-b border-border/30 shadow-lg shadow-black/10"
-      : "bg-transparent dark"
-      }`}>
-      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="relative">
-            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-emerald-500 via-cyan-500 to-violet-500 opacity-60 blur-sm group-hover:opacity-100 transition-opacity" />
-            <div className="relative bg-[#0a0e1a] rounded-full p-1.5">
-              <Image src="/logo.svg" height={24} width={24} alt="CogniMeet.AI" />
-            </div>
-          </div>
-          <span className="text-lg font-bold gradient-text">CogniMeet.AI</span>
-        </Link>
-
-        <div className="hidden md:flex items-center gap-8">
-          <a href="#features" className={`text-sm transition-colors ${scrolled ? "text-muted-foreground hover:text-foreground" : "text-white/70 hover:text-white"}`}>Features</a>
-          <a href="#how-it-works" className={`text-sm transition-colors ${scrolled ? "text-muted-foreground hover:text-foreground" : "text-white/70 hover:text-white"}`}>How It Works</a>
-          <a href="#pricing" className={`text-sm transition-colors ${scrolled ? "text-muted-foreground hover:text-foreground" : "text-white/70 hover:text-white"}`}>Pricing</a>
-        </div>
-
-        <div className="hidden md:flex items-center gap-4">
-          {mounted && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className={`size-9 rounded-xl border transition-colors ${scrolled
-                  ? "text-muted-foreground hover:text-foreground border-black/5 dark:border-white/5 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10"
-                  : "text-white/80 hover:text-white border-white/10 bg-white/10 hover:bg-white/20"
-                }`}
-            >
-              {theme === "dark" ? <SunIcon className="size-4.5 text-emerald-400" /> : <MoonIcon className="size-4.5 text-violet-400" />}
-            </Button>
-          )}
-          {mounted && isLoaded && isSignedIn ? (
-            <>
-              <Button
-                variant="ghost"
-                asChild
-                className={scrolled ? "text-muted-foreground hover:text-foreground" : "text-white/80 hover:text-white"}
-              >
-                <Link href="/dashboard">Dashboard</Link>
-              </Button>
-              <UserButton />
-            </>
-          ) : (
-            <>
-              <Button
-                variant="ghost"
-                asChild
-                className={scrolled ? "text-muted-foreground hover:text-foreground" : "text-white/80 hover:text-white"}
-              >
-                <Link href="/sign-in">Sign In</Link>
-              </Button>
-              <Button asChild className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20">
-                <Link href="/sign-up">
-                  Get Started Free
-                  <ArrowRightIcon className="size-4 ml-1" />
-                </Link>
-              </Button>
-            </>
-          )}
-        </div>
-
-        <Button
-          variant="ghost"
-          className={`md:hidden size-9 ${scrolled ? "text-muted-foreground hover:text-foreground" : "text-white/80 hover:text-white"}`}
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        >
-          {mobileMenuOpen ? <XIcon className="size-5" /> : <MenuIcon className="size-5" />}
-        </Button>
-      </div>
-
-      {/* Mobile Menu */}
-      {mobileMenuOpen && (
-        <div className="md:hidden glass-card mx-4 mb-4 p-4 animate-slide-up">
-          <div className="flex flex-col gap-3">
-            <a href="#features" className="text-sm text-muted-foreground hover:text-foreground py-2">Features</a>
-            <a href="#how-it-works" className="text-sm text-muted-foreground hover:text-foreground py-2">How It Works</a>
-            <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground py-2">Pricing</a>
-            <div className="border-t border-border/30 pt-3 flex flex-col gap-2">
-              {mounted && (
-                <Button
-                  variant="outline"
-                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                  className="w-full flex items-center justify-center gap-2 border-black/10 dark:border-white/10 text-muted-foreground hover:text-foreground"
-                >
-                  {theme === "dark" ? (
-                    <>
-                      <SunIcon className="size-4 text-emerald-400" />
-                      <span>Switch to Light Theme</span>
-                    </>
-                  ) : (
-                    <>
-                      <MoonIcon className="size-4 text-violet-500" />
-                      <span>Switch to Dark Theme</span>
-                    </>
-                  )}
-                </Button>
-              )}
-              {mounted && isLoaded && isSignedIn ? (
-                <>
-                  <Button variant="ghost" asChild className="w-full"><Link href="/dashboard">Dashboard</Link></Button>
-                  <div className="flex justify-center py-2">
-                    <UserButton />
-                  </div>
-                </>
-              ) : (
-                <>
-                  <Button variant="ghost" asChild className="w-full"><Link href="/sign-in">Sign In</Link></Button>
-                  <Button asChild className="w-full bg-emerald-600 hover:bg-emerald-500 text-white">
-                    <Link href="/sign-up">Get Started Free</Link>
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-    </nav>
-  );
-};
 
 /* ───────────── Pricing Card ───────────── */
 const PricingCard = ({ title, monthlyPrice, yearlyPrice, billingCycle, description, features, highlighted, delay }: {
@@ -352,7 +217,7 @@ export const LandingView = () => {
             </div>
 
             <p className="mt-6 md:mt-8 text-xs font-medium text-slate-500 tracking-widest uppercase animate-fade-in" style={{ animationDelay: "1s" }}>
-              Right-click + drag to shatter particles
+              Hover & click to interact with particles
             </p>
           </div>
         </div>
@@ -1043,57 +908,84 @@ export const LandingView = () => {
       </section>
 
       {/* ═══ FOOTER ═══ */}
-      <footer className="border-t border-black/5 dark:border-border/30 py-16 px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
-            <div className="col-span-2 md:col-span-1 space-y-4">
-              <div className="flex items-center gap-3">
-                <Image src="/logo.svg" height={24} width={24} alt="CogniMeet.AI" />
-                <span className="text-base font-bold gradient-text">CogniMeet.AI</span>
+      <footer className="relative border-t border-black/5 dark:border-white/5 bg-slate-50 dark:bg-[#030614] pt-24 pb-12 overflow-hidden">
+        {/* Decorative background elements */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-[1px] bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-emerald-500/10 blur-[120px] rounded-full pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+          <div className="grid grid-cols-2 md:grid-cols-12 gap-12 mb-20">
+            {/* Branding Column */}
+            <div className="col-span-2 md:col-span-5 space-y-6">
+              <div className="flex items-center gap-3 group">
+                <div className="relative bg-white dark:bg-[#0a0e1a] rounded-full p-2 border border-black/10 dark:border-white/10 shadow-[0_0_15px_rgba(16,185,129,0.1)] dark:shadow-[0_0_15px_rgba(16,185,129,0.2)] transition-transform group-hover:scale-105 duration-300">
+                  <Image src="/logo.svg" height={28} width={28} alt="CogniMeet.AI" />
+                </div>
+                <span className="text-xl font-bold text-slate-900 dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-white dark:to-white/60 tracking-tight">CogniMeet.AI</span>
               </div>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Zero-downtime, speaker-attributed meeting intelligence coworker.
+              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed max-w-sm">
+                The world's most advanced AI meeting coworker. Zero-downtime, speaker-attributed meeting intelligence for teams that move fast.
               </p>
-              <div className="flex items-center gap-2 pt-2">
-                <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[10px] font-semibold text-emerald-400 uppercase tracking-wider">All Systems Operational</span>
+              
+              <div className="flex items-center gap-3 pt-4">
+                <a href="https://github.com/devhimanshuu" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center size-10 rounded-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10 hover:border-emerald-500/30 transition-all cursor-pointer group">
+                   <GithubIcon className="size-4 text-slate-500 dark:text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors" />
+                </a>
+                <a href="https://www.linkedin.com/in/himanshu-guptaa/" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center size-10 rounded-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10 hover:border-emerald-500/30 transition-all cursor-pointer group">
+                   <LinkedinIcon className="size-4 text-slate-500 dark:text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors" />
+                </a>
+                <a href="https://x.com/devhimanshuu" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center size-10 rounded-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10 hover:border-emerald-500/30 transition-all cursor-pointer group">
+                   <TwitterIcon className="size-4 text-slate-500 dark:text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors" />
+                </a>
+                <a href="https://himanshuguptaa.vercel.app" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center size-10 rounded-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10 hover:border-emerald-500/30 transition-all cursor-pointer group">
+                   <GlobeIcon className="size-4 text-slate-500 dark:text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors" />
+                </a>
               </div>
             </div>
 
-            <div className="space-y-3">
-              <h4 className="text-xs font-bold tracking-widest uppercase text-slate-900 dark:text-white">Product</h4>
-              <ul className="space-y-2 text-xs text-muted-foreground">
-                <li><a href="#features" className="hover:text-slate-900 dark:hover:text-white transition-colors">Features</a></li>
-                <li><a href="#pricing" className="hover:text-slate-900 dark:hover:text-white transition-colors">Pricing</a></li>
-                <li><a href="#how-it-works" className="hover:text-slate-900 dark:hover:text-white transition-colors">How It Works</a></li>
+            {/* Links Columns */}
+            <div className="col-span-1 md:col-span-2 md:col-start-7 space-y-5">
+              <h4 className="text-sm font-semibold text-slate-900 dark:text-white">Product</h4>
+              <ul className="space-y-4 text-sm text-slate-600 dark:text-slate-400">
+                <li><a href="#features" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Features</a></li>
+                <li><a href="#pricing" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Pricing</a></li>
+                <li><a href="#how-it-works" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">How It Works</a></li>
+                <li><a href="#" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Integrations</a></li>
               </ul>
             </div>
 
-            <div className="space-y-3">
-              <h4 className="text-xs font-bold tracking-widest uppercase text-slate-900 dark:text-white">Powered by</h4>
-              <ul className="space-y-2 text-xs text-muted-foreground">
-                <li><span className="text-slate-600 dark:text-white/60">Groq</span></li>
-                <li><span className="text-slate-600 dark:text-white/60">Stream Video</span></li>
-                <li><span className="text-slate-600 dark:text-white/60">Tavily Search</span></li>
+            <div className="col-span-1 md:col-span-2 space-y-5">
+              <h4 className="text-sm font-semibold text-slate-900 dark:text-white">Company</h4>
+              <ul className="space-y-4 text-sm text-slate-600 dark:text-slate-400">
+                <li><Link href="/about" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">About</Link></li>
+                <li><a href="#" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Blog</a></li>
+                <li><a href="#" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Careers</a></li>
+                <li><a href="#" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Contact</a></li>
               </ul>
             </div>
 
-            <div className="space-y-3">
-              <h4 className="text-xs font-bold tracking-widest uppercase text-slate-900 dark:text-white">Resources</h4>
-              <ul className="space-y-2 text-xs text-muted-foreground">
-                <li><a href="#features" className="hover:text-slate-900 dark:hover:text-white transition-colors">Documentation</a></li>
-                <li><a href="#pricing" className="hover:text-slate-900 dark:hover:text-white transition-colors">Support</a></li>
-                <li><a href="#how-it-works" className="hover:text-slate-900 dark:hover:text-white transition-colors">Changelog</a></li>
+            <div className="col-span-2 md:col-span-2 space-y-5">
+              <h4 className="text-sm font-semibold text-slate-900 dark:text-white">Legal</h4>
+              <ul className="space-y-4 text-sm text-slate-600 dark:text-slate-400">
+                <li><Link href="/privacy-policy" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Privacy Policy</Link></li>
+                <li><Link href="/terms-of-service" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Terms of Service</Link></li>
+                <li><Link href="/security" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Security</Link></li>
               </ul>
             </div>
           </div>
 
-          <div className="border-t border-black/5 dark:border-white/5 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
-            <p>© 2026 CogniMeet.AI. All rights reserved.</p>
-            <div className="flex gap-6">
-              <span className="hover:text-slate-900 dark:hover:text-white transition-colors">Terms of Service</span>
-              <span className="hover:text-slate-900 dark:hover:text-white transition-colors">Privacy Policy</span>
+          <div className="border-t border-black/10 dark:border-white/10 pt-8 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-3 bg-black/5 dark:bg-white/5 py-2 px-4 rounded-full border border-black/5 dark:border-white/5">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+              </span>
+              <span className="text-xs font-medium text-slate-700 dark:text-emerald-400/90 tracking-wide uppercase">All Systems Operational</span>
             </div>
+            
+            <p className="text-sm text-slate-500 dark:text-slate-500">
+              © {new Date().getFullYear()} CogniMeet.AI. All rights reserved.
+            </p>
           </div>
         </div>
       </footer>

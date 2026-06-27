@@ -15,6 +15,9 @@ export const metadata: Metadata = {
   title: "CogniMeet.AI — AI-Powered Meeting Intelligence",
   description: "Transform your meetings with AI coworkers that join calls, take notes, extract action items, and provide real-time intelligence. Built for teams that move fast.",
   keywords: ["AI meetings", "meeting intelligence", "AI assistant", "transcription", "action items"],
+  icons: {
+    icon: "/logo.svg",
+  },
   openGraph: {
     title: "CogniMeet.AI — AI-Powered Meeting Intelligence",
     description: "Transform your meetings with AI coworkers that join calls, take notes, and provide real-time intelligence.",
