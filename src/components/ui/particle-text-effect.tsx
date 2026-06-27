@@ -259,7 +259,7 @@ export function ParticleTextEffect({ words = DEFAULT_WORDS }: ParticleTextEffect
     // Responsive base font size
     let fontSize = Math.min(canvas.width * 0.15, 180)
     offscreenCtx.font = `bold ${fontSize}px Arial`
-    let textWidth = offscreenCtx.measureText(word).width
+    const textWidth = offscreenCtx.measureText(word).width
     
     const maxWidth = canvas.width * 0.85
     if (textWidth > maxWidth) {

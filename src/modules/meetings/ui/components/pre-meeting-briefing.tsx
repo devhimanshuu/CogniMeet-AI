@@ -1,12 +1,19 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { SparklesIcon, CalendarClockIcon, AlertCircleIcon, ArrowRightIcon } from "lucide-react";
-import { AgentGetOne } from "@/modules/agents/types";
+import { SparklesIcon, CalendarClockIcon, AlertCircleIcon } from "lucide-react";
+import { MeetingStatus } from "@/modules/meetings/types";
 import { useTRPC } from "@/trpc/client";
 
 interface Props {
-  agent: AgentGetOne;
+  agent: {
+    id: string;
+    name: string;
+    userId: string;
+    instructions: string;
+    createdAt: string;
+    updatedAt: string;
+  };
 }
 
 export const PreMeetingBriefing = ({ agent }: Props) => {
@@ -14,7 +21,7 @@ export const PreMeetingBriefing = ({ agent }: Props) => {
   const { data, isLoading } = useQuery(
     trpc.meetings.getMany.queryOptions({ 
       agentId: agent.id, 
-      status: "completed", 
+      status: MeetingStatus.Completed, 
       pageSize: 1 
     })
   );

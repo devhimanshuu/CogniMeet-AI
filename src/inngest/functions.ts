@@ -97,7 +97,7 @@ You MUST respond with ONLY a valid JSON object matching this schema:
         // Strip markdown code blocks if the LLM wraps the JSON
         const cleanJson = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
         return JSON.parse(cleanJson);
-      } catch (e) {
+      } catch {
         console.error("Failed to parse AI JSON response:", responseText);
         return {
           summary: responseText, // Fallback to raw text

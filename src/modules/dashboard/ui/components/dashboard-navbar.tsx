@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PanelLeftCloseIcon, PanelLeftIcon, SearchIcon, PlusIcon, BellIcon } from "lucide-react";
+import { PanelLeftCloseIcon, PanelLeftIcon, SearchIcon, BellIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";

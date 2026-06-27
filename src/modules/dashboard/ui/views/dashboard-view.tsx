@@ -49,7 +49,7 @@ const StatCard = ({ title, value, icon: Icon, trend, color }: StatCardProps) => 
 export const DashboardView = () => {
   const trpc = useTRPC();
 
-  const { data: meetingsData, isLoading: isLoadingMeetings } = useQuery(
+  const { data: meetingsData } = useQuery(
     trpc.meetings.getMany.queryOptions({ pageSize: 5 })
   );
 

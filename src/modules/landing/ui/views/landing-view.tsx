@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
-import { useAuth, UserButton } from "@clerk/nextjs";
+import { useAuth } from "@clerk/nextjs";
 import {
   SparklesIcon,
   VideoIcon,
@@ -12,17 +12,12 @@ import {
   FileTextIcon,
   BrainCircuitIcon,
   ZapIcon,
-  ShieldCheckIcon,
   ArrowRightIcon,
   CheckIcon,
-  MenuIcon,
-  XIcon,
   BarChart3Icon,
   MessagesSquareIcon,
   TargetIcon,
   GlobeIcon,
-  Sun as SunIcon,
-  Moon as MoonIcon,
   Linkedin as LinkedinIcon,
   Github as GithubIcon,
   Twitter as TwitterIcon,
@@ -108,7 +103,7 @@ const PricingCard = ({ title, monthlyPrice, yearlyPrice, billingCycle, descripti
 
 /* ───────────── Main Landing View ───────────── */
 export const LandingView = () => {
-  const { theme } = useTheme();
+  useTheme();
   const [activeWorkStep, setActiveWorkStep] = useState(0); // 0: Configure, 1: Meet, 2: Automate
   const [summaryStep, setSummaryStep] = useState(0);
   const [actionItemChecked, setActionItemChecked] = useState(false);
@@ -301,7 +296,7 @@ export const LandingView = () => {
                 <div className="space-y-2 text-[11px]">
                   <div className="flex gap-2">
                     <span className="font-semibold text-cyan-400">Parth:</span>
-                    <span className="text-slate-700 dark:text-white/70">Let's verify Tavily fallback.</span>
+                    <span className="text-slate-700 dark:text-white/70">Let&apos;s verify Tavily fallback.</span>
                   </div>
                   <div className="flex gap-2 border-t border-black/5 dark:border-white/5 pt-1.5">
                     <span className="font-semibold text-emerald-400 animate-pulse">AI Co-worker:</span>
@@ -352,7 +347,7 @@ export const LandingView = () => {
               <div className="glass-card bg-black/5 dark:bg-[#0b0f19]/80 border border-black/5 dark:border-white/10 rounded-2xl p-4 shadow-inner mt-4 space-y-2.5">
                 <div className="bg-black/5 dark:bg-white/5 rounded-lg px-2.5 py-1.5 flex items-center gap-2 border border-black/5 dark:border-white/5">
                   <span className="text-[9px] text-blue-500 font-semibold">Tavily:</span>
-                  <span className="text-[10px] text-slate-600 dark:text-white/55 font-mono overflow-hidden whitespace-nowrap text-ellipsis w-full">"Groq rate limits 2026"</span>
+                  <span className="text-[10px] text-slate-600 dark:text-white/55 font-mono overflow-hidden whitespace-nowrap text-ellipsis w-full">&quot;Groq rate limits 2026&quot;</span>
                 </div>
                 <div className="bg-emerald-500/10 rounded px-2 py-1 flex items-center justify-between border border-emerald-500/15">
                   <span className="text-[9px] text-emerald-500 font-semibold">✓ Verified Source</span>
@@ -626,8 +621,8 @@ export const LandingView = () => {
 
                       {/* Transcript */}
                       <div className="bg-black/5 dark:bg-[#0b0f19] border border-black/5 dark:border-white/5 rounded-xl p-3 text-[11px] font-mono text-slate-800 dark:text-white/70 space-y-1.5 shadow-inner">
-                        <p><span className="text-cyan-500 dark:text-cyan-400">Sarah:</span> "We need custom radial cursor glows in the dashboard."</p>
-                        <p className="text-emerald-500 dark:text-emerald-400"><span className="text-emerald-500 dark:text-emerald-400">🤖 AI Agent:</span> "Added action item for Parth: implement cursor glow."</p>
+                        <p><span className="text-cyan-500 dark:text-cyan-400">Sarah:</span> &quot;We need custom radial cursor glows in the dashboard.&quot;</p>
+                        <p className="text-emerald-500 dark:text-emerald-400"><span className="text-emerald-500 dark:text-emerald-400">🤖 AI Agent:</span> &quot;Added action item for Parth: implement cursor glow.&quot;</p>
                       </div>
                     </div>
                   )}
@@ -931,7 +926,7 @@ export const LandingView = () => {
                 <span className="text-xl font-bold text-slate-900 dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-white dark:to-white/60 tracking-tight">CogniMeet.AI</span>
               </div>
               <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed max-w-sm">
-                The world's most advanced AI meeting coworker. Zero-downtime, speaker-attributed meeting intelligence for teams that move fast.
+                The world&apos;s most advanced AI meeting coworker. Zero-downtime, speaker-attributed meeting intelligence for teams that move fast.
               </p>
               
               <div className="flex items-center gap-3 pt-4">
