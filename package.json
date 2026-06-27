@@ -107,5 +107,9 @@
     "tsx": "^4.19.4",
     "tw-animate-css": "^1.3.0",
     "typescript": "^5"
+  },
+  "overrides": {
+    "react": "$react",
+    "react-dom": "$react-dom"
   }
 }
