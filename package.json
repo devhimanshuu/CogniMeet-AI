@@ -9,7 +9,8 @@
     "lint": "next lint",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "dev:webhook": "ngrok http 3000"
+    "dev:webhook": "ngrok http 3000",
+    "fix-vercel-casing": "git config core.ignorecase false && git rm -r --cached . && git add . && git commit -m \"Fix Git case-sensitivity for Vercel\""
   },
   "dependencies": {
     "@clerk/nextjs": "^7.4.3",
