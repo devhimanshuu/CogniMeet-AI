@@ -15,6 +15,57 @@ import { meetingsInsertSchema, meetingsUpdateSchema } from "../schemas";
 import { streamChat } from "@/lib/stream-chat";
 
 export const meetingsRouter = createTRPCRouter({
+  getStats: protectedProcedure.query(async ({ ctx }) => {
+    const [meetingCount] = await db
+      .select({ count: count() })
+      .from(meetings)
+      .where(eq(meetings.userId, ctx.auth.user.id));
+
+    const [completedMeetings] = await db
+      .select({
+        count: count(),
+        totalDuration: sql<number>`COALESCE(SUM(EXTRACT(EPOCH FROM (ended_at - started_at))), 0)`,
+        avgScore: sql<number>`COALESCE(AVG(meeting_score), 0)`,
+      })
+      .from(meetings)
+      .where(
+        and(
+          eq(meetings.userId, ctx.auth.user.id),
+          eq(meetings.status, "completed"),
+        )
+      );
+
+    const actionItemRows = await db
+      .select({ actionItems: meetings.actionItems })
+      .from(meetings)
+      .where(
+        and(
+          eq(meetings.userId, ctx.auth.user.id),
+          eq(meetings.status, "completed"),
+          sql`${meetings.actionItems} IS NOT NULL`,
+        )
+      );
+
+    let totalActionItems = 0;
+    for (const row of actionItemRows) {
+      try {
+        const items = JSON.parse(row.actionItems || "[]");
+        totalActionItems += Array.isArray(items) ? items.length : 0;
+      } catch {
+        // skip malformed JSON
+      }
+    }
+
+    const totalHours = Number(completedMeetings.totalDuration) / 3600;
+    const avgScore = Math.round(Number(completedMeetings.avgScore));
+
+    return {
+      totalMeetings: meetingCount.count,
+      totalActionItems,
+      hoursSaved: Math.round(totalHours * 10) / 10,
+      avgScore,
+    };
+  }),
   generateChatToken: protectedProcedure.mutation(async ({ ctx }) => {
     const token = streamChat.createToken(ctx.auth.user.id);
     await streamChat.upsertUser({

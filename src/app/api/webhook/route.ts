@@ -92,35 +92,23 @@ export async function POST(req: NextRequest) {
 
     const call = streamVideo.video.call("default", meetingId);
     
-    // ElevenLabs Conversational AI Voice Bot Integration
-    // Primary: ElevenLabs Agents | Fallback 1: ElevenLabs TTS + Groq | Fallback 2: HuggingFace TTS
-    // Note: Full WebSocket audio streaming into Stream Video requires a dedicated
-    // media server process. The webhook sets up the agent context; a separate 
-    // service (or Edge Function) handles the real-time audio bridge.
-    try {
-      console.log("[Voice Bot] Attempting to initialize ElevenLabs Conversational Agent for meeting:", meetingId);
-      console.log("[Voice Bot] Agent instructions:", existingAgent.instructions.substring(0, 100) + "...");
-      // TODO: Connect ElevenLabs Conversational Agent to Stream Video call
-      // This requires:
-      // 1. Creating an ElevenLabs conversation session via their WebSocket API
-      // 2. Bridging the Stream Video audio track to the ElevenLabs WebSocket
-      // 3. Piping ElevenLabs audio responses back into the Stream Video call
-      // For now, the agent joins the call as a silent participant that will 
-      // respond via the post-meeting chat with full context.
-      console.log("[Voice Bot] ElevenLabs Agent context prepared for meeting:", meetingId);
-    } catch (voiceError) {
-      console.error("[Voice Bot] Failed to initialize voice bot, agent will be chat-only:", voiceError);
-    }
+    // The agent will respond via the post-meeting chat with full context.
+    // Audio processing is handled by Stream Video and webhook transcription.
   } else if (eventType === "call.session_participant_left") {
     const event = payload as CallSessionParticipantLeftEvent;
-    const meetingId = event.call_cid.split(":")[1]; // call_cid is formatted as "type:id"
+    const meetingId = event.call_cid.split(":")[1];
 
     if (!meetingId) {
       return NextResponse.json({ error: "Missing meetingId" }, { status: 400 });
     }
 
     const call = streamVideo.video.call("default", meetingId);
-    await call.end();
+    const callState = await call.get();
+    const participantCount = callState.call.session?.participants?.length ?? 0;
+
+    if (participantCount <= 1) {
+      await call.end();
+    }
   } else if (eventType === "call.session_ended") {
     const event = payload as CallEndedEvent;
     const meetingId = event.call.custom?.meetingId;
@@ -271,13 +259,13 @@ export async function POST(req: NextRequest) {
         variant: "botttsNeutral",
       });
 
-      streamChat.upsertUser({
+      await streamChat.upsertUser({
         id: existingAgent.id,
         name: existingAgent.name,
         image: avatarUrl,
       });
 
-      channel.sendMessage({
+      await channel.sendMessage({
         text: GPTResponseText,
         user: {
           id: existingAgent.id,

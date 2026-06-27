@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import { ErrorBoundary } from "react-error-boundary";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
@@ -29,7 +31,19 @@ const Page = async ({ params }: Props) => {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <CallView meetingId={meetingId} />
+      <Suspense fallback={
+        <div className="flex h-screen items-center justify-center bg-radial from-sidebar-accent to-sidebar">
+          <div className="text-white">Loading call...</div>
+        </div>
+      }>
+        <ErrorBoundary fallback={
+          <div className="flex h-screen items-center justify-center bg-radial from-sidebar-accent to-sidebar">
+            <div className="text-white">Error loading call. Please try again.</div>
+          </div>
+        }>
+          <CallView meetingId={meetingId} />
+        </ErrorBoundary>
+      </Suspense>
     </HydrationBoundary>
   );
 };

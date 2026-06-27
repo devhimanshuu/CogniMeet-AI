@@ -12,8 +12,7 @@ const openRouterClient = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
 });
 
-// Using HUGGINFACE_API_KEY as defined in .env
-const hf = new HfInference(process.env.HUGGINFACE_API_KEY);
+const hf = new HfInference(process.env.HUGGINGFACE_API_KEY);
 
 export async function generateTextWithFallback(
   messages: ChatCompletionMessageParam[],

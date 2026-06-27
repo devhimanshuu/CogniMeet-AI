@@ -123,12 +123,20 @@ export const CompletedState = ({ data }: Props) => {
           </div>
         </TabsContent>
         <TabsContent value="recording">
-          <div className="glass-card p-5">
-            <video
-              src={data.recordingUrl!}
-              className="w-full rounded-lg"
-              controls
-            />
+          <div className="glass-card p-5 flex items-center justify-center min-h-[300px]">
+            {data.recordingUrl ? (
+              <video
+                src={data.recordingUrl}
+                className="w-full rounded-lg"
+                controls
+              />
+            ) : (
+              <div className="text-center">
+                <FileVideoIcon className="size-10 mx-auto text-muted-foreground mb-3 opacity-50" />
+                <h3 className="text-lg font-medium">Recording not available yet</h3>
+                <p className="text-sm text-muted-foreground">Please check back later.</p>
+              </div>
+            )}
           </div>
         </TabsContent>
         <TabsContent value="summary">

@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
-import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { useAuth, UserButton } from "@clerk/nextjs";
 import {
   SparklesIcon,
   VideoIcon,
@@ -33,6 +33,7 @@ const LandingNavbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const { isSignedIn, isLoaded } = useAuth();
 
   useEffect(() => {
     setMounted(true);
@@ -77,31 +78,34 @@ const LandingNavbar = () => {
               {theme === "dark" ? <SunIcon className="size-4.5 text-emerald-400" /> : <MoonIcon className="size-4.5 text-violet-400" />}
             </Button>
           )}
-          <SignedOut>
-            <Button
-              variant="ghost"
-              asChild
-              className={scrolled ? "text-muted-foreground hover:text-foreground" : "text-white/80 hover:text-white"}
-            >
-              <Link href="/sign-in">Sign In</Link>
-            </Button>
-            <Button asChild className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20">
-              <Link href="/sign-up">
-                Get Started Free
-                <ArrowRightIcon className="size-4 ml-1" />
-              </Link>
-            </Button>
-          </SignedOut>
-          <SignedIn>
-            <Button
-              variant="ghost"
-              asChild
-              className={scrolled ? "text-muted-foreground hover:text-foreground" : "text-white/80 hover:text-white"}
-            >
-              <Link href="/dashboard">Dashboard</Link>
-            </Button>
-            <UserButton />
-          </SignedIn>
+          {mounted && isLoaded && isSignedIn ? (
+            <>
+              <Button
+                variant="ghost"
+                asChild
+                className={scrolled ? "text-muted-foreground hover:text-foreground" : "text-white/80 hover:text-white"}
+              >
+                <Link href="/dashboard">Dashboard</Link>
+              </Button>
+              <UserButton />
+            </>
+          ) : (
+            <>
+              <Button
+                variant="ghost"
+                asChild
+                className={scrolled ? "text-muted-foreground hover:text-foreground" : "text-white/80 hover:text-white"}
+              >
+                <Link href="/sign-in">Sign In</Link>
+              </Button>
+              <Button asChild className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20">
+                <Link href="/sign-up">
+                  Get Started Free
+                  <ArrowRightIcon className="size-4 ml-1" />
+                </Link>
+              </Button>
+            </>
+          )}
         </div>
 
         <Button
@@ -140,18 +144,21 @@ const LandingNavbar = () => {
                   )}
                 </Button>
               )}
-              <SignedOut>
-                <Button variant="ghost" asChild className="w-full"><Link href="/sign-in">Sign In</Link></Button>
-                <Button asChild className="w-full bg-emerald-600 hover:bg-emerald-500 text-white">
-                  <Link href="/sign-up">Get Started Free</Link>
-                </Button>
-              </SignedOut>
-              <SignedIn>
-                <Button variant="ghost" asChild className="w-full"><Link href="/dashboard">Dashboard</Link></Button>
-                <div className="flex justify-center py-2">
-                  <UserButton />
-                </div>
-              </SignedIn>
+              {mounted && isLoaded && isSignedIn ? (
+                <>
+                  <Button variant="ghost" asChild className="w-full"><Link href="/dashboard">Dashboard</Link></Button>
+                  <div className="flex justify-center py-2">
+                    <UserButton />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <Button variant="ghost" asChild className="w-full"><Link href="/sign-in">Sign In</Link></Button>
+                  <Button asChild className="w-full bg-emerald-600 hover:bg-emerald-500 text-white">
+                    <Link href="/sign-up">Get Started Free</Link>
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -165,6 +172,13 @@ const PricingCard = ({ title, monthlyPrice, yearlyPrice, billingCycle, descripti
   title: string; monthlyPrice: string; yearlyPrice: string; billingCycle: "monthly" | "yearly"; description: string; features: string[]; highlighted?: boolean; delay: number;
 }) => {
   const price = billingCycle === "monthly" ? monthlyPrice : yearlyPrice;
+  const [mounted, setMounted] = useState(false);
+  const { isSignedIn, isLoaded } = useAuth();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <div
       className={`relative glass-card p-10 flex flex-col rounded-3xl transition-all duration-500 hover:-translate-y-2 group animate-slide-up ${highlighted
@@ -198,19 +212,7 @@ const PricingCard = ({ title, monthlyPrice, yearlyPrice, billingCycle, descripti
           </li>
         ))}
       </ul>
-      <SignedOut>
-        <Button
-          className={highlighted
-            ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_30px_-5px_rgba(16,185,129,0.5)] hover:shadow-[0_0_40px_-5px_rgba(16,185,129,0.7)] w-full h-14 rounded-2xl text-base transition-all hover:scale-[1.03]"
-            : "w-full h-14 rounded-2xl text-base bg-background/50 backdrop-blur-sm border-black/10 dark:border-white/10 hover:bg-secondary/50 transition-all hover:scale-[1.03]"
-          }
-          variant={highlighted ? "default" : "outline"}
-          asChild
-        >
-          <Link href="/sign-up">{highlighted ? "Get Started" : "Start Free"}</Link>
-        </Button>
-      </SignedOut>
-      <SignedIn>
+      {mounted && isLoaded && isSignedIn ? (
         <Button
           className={highlighted
             ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_30px_-5px_rgba(16,185,129,0.5)] hover:shadow-[0_0_40px_-5px_rgba(16,185,129,0.7)] w-full h-14 rounded-2xl text-base transition-all hover:scale-[1.03]"
@@ -223,7 +225,18 @@ const PricingCard = ({ title, monthlyPrice, yearlyPrice, billingCycle, descripti
             {highlighted ? "Upgrade Now" : "Go to Dashboard"}
           </Link>
         </Button>
-      </SignedIn>
+      ) : (
+        <Button
+          className={highlighted
+            ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_30px_-5px_rgba(16,185,129,0.5)] hover:shadow-[0_0_40px_-5px_rgba(16,185,129,0.7)] w-full h-14 rounded-2xl text-base transition-all hover:scale-[1.03]"
+            : "w-full h-14 rounded-2xl text-base bg-background/50 backdrop-blur-sm border-black/10 dark:border-white/10 hover:bg-secondary/50 transition-all hover:scale-[1.03]"
+          }
+          variant={highlighted ? "default" : "outline"}
+          asChild
+        >
+          <Link href="/sign-up">{highlighted ? "Get Started" : "Start Free"}</Link>
+        </Button>
+      )}
     </div>
   );
 };
@@ -237,11 +250,14 @@ export const LandingView = () => {
   const [analyticsHovered, setAnalyticsHovered] = useState(false);
   const [activeProvider, setActiveProvider] = useState("groq");
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
+  const [mounted, setMounted] = useState(false);
+  const { isSignedIn, isLoaded } = useAuth();
 
   const [ctaCoords, setCtaCoords] = useState({ x: 0, y: 0 });
   const [ctaHovered, setCtaHovered] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const summaryInterval = setInterval(() => {
       setSummaryStep((s) => (s + 1) % 3);
     }, 3000);
@@ -311,22 +327,21 @@ export const LandingView = () => {
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 md:gap-5 relative z-10">
-                <SignedOut>
-                  <Button asChild size="lg" className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_40px_-10px_rgba(16,185,129,0.6)] px-8 md:px-10 h-12 md:h-14 text-sm md:text-base rounded-xl md:rounded-2xl transition-all hover:scale-105">
-                    <Link href="/sign-up">
-                      <SparklesIcon className="size-4 sm:size-5 mr-2" />
-                      Get Started Free
-                    </Link>
-                  </Button>
-                </SignedOut>
-                <SignedIn>
+                {mounted && isLoaded && isSignedIn ? (
                   <Button asChild size="lg" className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_40px_-10px_rgba(16,185,129,0.6)] px-8 md:px-10 h-12 md:h-14 text-sm md:text-base rounded-xl md:rounded-2xl transition-all hover:scale-105">
                     <Link href="/dashboard">
                       <SparklesIcon className="size-4 sm:size-5 mr-2" />
                       Go to Dashboard
                     </Link>
                   </Button>
-                </SignedIn>
+                ) : (
+                  <Button asChild size="lg" className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_40px_-10px_rgba(16,185,129,0.6)] px-8 md:px-10 h-12 md:h-14 text-sm md:text-base rounded-xl md:rounded-2xl transition-all hover:scale-105">
+                    <Link href="/sign-up">
+                      <SparklesIcon className="size-4 sm:size-5 mr-2" />
+                      Get Started Free
+                    </Link>
+                  </Button>
+                )}
                 <Button asChild size="lg" variant="outline" className="w-full sm:w-auto border-white/10 hover:bg-slate-800/50 px-8 md:px-10 h-12 md:h-14 text-sm md:text-base rounded-xl md:rounded-2xl bg-slate-900/30 text-white backdrop-blur-sm transition-all hover:scale-105">
                   <a href="#features">
                     Discover Features
@@ -624,8 +639,8 @@ export const LandingView = () => {
                 {
                   step: 2,
                   number: "03",
-                  title: "Automate & Action",
-                  description: "Review generated action items, key decisions, and sync them instantly to your Slack channels and Jira task boards.",
+                  title: "Review & Act",
+                  description: "Review AI-generated summaries, action items, key decisions, and continue chatting with your agent for follow-ups.",
                 }
               ].map((item) => (
                 <button
@@ -757,32 +772,29 @@ export const LandingView = () => {
                     <div className="space-y-6 animate-fade-in">
                       <div className="flex items-center justify-between border-b border-black/5 dark:border-white/5 pb-3">
                         <div>
-                          <h4 className="text-sm font-semibold text-slate-900 dark:text-white">Automation Hub</h4>
-                          <p className="text-[10px] text-muted-foreground">Post-call synchronization</p>
+                          <h4 className="text-sm font-semibold text-slate-900 dark:text-white">Meeting Intelligence</h4>
+                          <p className="text-[10px] text-muted-foreground">Post-call AI analysis</p>
                         </div>
                         <span className="text-[10px] bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20 px-2 py-0.5 rounded font-medium">Complete</span>
                       </div>
 
                       <div className="grid grid-cols-3 gap-3">
-                        {/* Slack Card */}
                         <div className="bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 border border-black/5 dark:border-white/5 rounded-xl p-3 transition-colors">
-                          <span className="text-[9px] font-bold text-violet-600 dark:text-violet-400 block mb-1">Slack Sync</span>
-                          <p className="text-[8px] text-slate-500 dark:text-white/50 leading-tight">Summaries auto-posted to #dev-updates.</p>
-                          <div className="mt-2 text-[8px] text-emerald-500 dark:text-emerald-400 font-semibold">✓ Posted</div>
+                          <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 block mb-1">AI Summary</span>
+                          <p className="text-[8px] text-slate-500 dark:text-white/50 leading-tight">Structured Markdown summary with key takeaways.</p>
+                          <div className="mt-2 text-[8px] text-emerald-500 dark:text-emerald-400 font-semibold">&#10003; Generated</div>
                         </div>
 
-                        {/* Notion Card */}
                         <div className="bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 border border-black/5 dark:border-white/5 rounded-xl p-3 transition-colors">
-                          <span className="text-[9px] font-bold text-slate-800 dark:text-white block mb-1">Notion Database</span>
-                          <p className="text-[8px] text-slate-500 dark:text-white/50 leading-tight">Meeting transcripts compiled to Workspace docs.</p>
-                          <div className="mt-2 text-[8px] text-emerald-500 dark:text-emerald-400 font-semibold">✓ Synthesized</div>
+                          <span className="text-[9px] font-bold text-cyan-600 dark:text-cyan-400 block mb-1">Action Items</span>
+                          <p className="text-[8px] text-slate-500 dark:text-white/50 leading-tight">Commitments extracted with assignees identified.</p>
+                          <div className="mt-2 text-[8px] text-emerald-500 dark:text-emerald-400 font-semibold">&#10003; 4 Items</div>
                         </div>
 
-                        {/* Jira Card */}
                         <div className="bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 border border-black/5 dark:border-white/5 rounded-xl p-3 transition-colors">
-                          <span className="text-[9px] font-bold text-blue-600 dark:text-blue-400 block mb-1">Jira Sprint Board</span>
-                          <p className="text-[8px] text-slate-500 dark:text-white/50 leading-tight">Actions converted to backlog issue items.</p>
-                          <div className="mt-2 text-[8px] text-emerald-400 font-semibold">✓ 4 Tickets</div>
+                          <span className="text-[9px] font-bold text-violet-600 dark:text-violet-400 block mb-1">AI Follow-up Chat</span>
+                          <p className="text-[8px] text-slate-500 dark:text-white/50 leading-tight">Ask your agent questions about the meeting anytime.</p>
+                          <div className="mt-2 text-[8px] text-emerald-500 dark:text-emerald-400 font-semibold">&#10003; Ready</div>
                         </div>
                       </div>
                     </div>
@@ -1011,22 +1023,21 @@ export const LandingView = () => {
               Join teams around the world using AI-powered meeting intelligence to make every sync count.
             </p>
 
-            <SignedOut>
-              <Button asChild size="lg" className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_50px_-10px_rgba(16,185,129,0.8)] px-12 h-16 text-lg rounded-2xl relative z-10 transition-transform hover:scale-[1.05] duration-300">
-                <Link href="/sign-up">
-                  Get Started For Free
-                  <ArrowRightIcon className="size-5 ml-3" />
-                </Link>
-              </Button>
-            </SignedOut>
-            <SignedIn>
+            {mounted && isLoaded && isSignedIn ? (
               <Button asChild size="lg" className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_50px_-10px_rgba(16,185,129,0.8)] px-12 h-16 text-lg rounded-2xl relative z-10 transition-transform hover:scale-[1.05] duration-300">
                 <Link href="/dashboard">
                   Go to Dashboard
                   <ArrowRightIcon className="size-5 ml-3" />
                 </Link>
               </Button>
-            </SignedIn>
+            ) : (
+              <Button asChild size="lg" className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_50px_-10px_rgba(16,185,129,0.8)] px-12 h-16 text-lg rounded-2xl relative z-10 transition-transform hover:scale-[1.05] duration-300">
+                <Link href="/sign-up">
+                  Get Started For Free
+                  <ArrowRightIcon className="size-5 ml-3" />
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
       </section>
@@ -1059,20 +1070,20 @@ export const LandingView = () => {
             </div>
 
             <div className="space-y-3">
-              <h4 className="text-xs font-bold tracking-widest uppercase text-slate-900 dark:text-white">Integrations</h4>
+              <h4 className="text-xs font-bold tracking-widest uppercase text-slate-900 dark:text-white">Powered by</h4>
               <ul className="space-y-2 text-xs text-muted-foreground">
-                <li><span className="text-slate-600 dark:text-white/60">Slack Bot</span></li>
-                <li><span className="text-slate-600 dark:text-white/60">Notion Hub</span></li>
-                <li><span className="text-slate-600 dark:text-white/60">Jira Connector</span></li>
+                <li><span className="text-slate-600 dark:text-white/60">Groq</span></li>
+                <li><span className="text-slate-600 dark:text-white/60">Stream Video</span></li>
+                <li><span className="text-slate-600 dark:text-white/60">Tavily Search</span></li>
               </ul>
             </div>
 
             <div className="space-y-3">
-              <h4 className="text-xs font-bold tracking-widest uppercase text-slate-900 dark:text-white">Security</h4>
+              <h4 className="text-xs font-bold tracking-widest uppercase text-slate-900 dark:text-white">Resources</h4>
               <ul className="space-y-2 text-xs text-muted-foreground">
-                <li><span className="text-slate-600 dark:text-white/60">HIPAA Compliant</span></li>
-                <li><span className="text-slate-600 dark:text-white/60">SOC2 Audits</span></li>
-                <li><span className="text-slate-600 dark:text-white/60">256-bit Encryption</span></li>
+                <li><a href="#features" className="hover:text-slate-900 dark:hover:text-white transition-colors">Documentation</a></li>
+                <li><a href="#pricing" className="hover:text-slate-900 dark:hover:text-white transition-colors">Support</a></li>
+                <li><a href="#how-it-works" className="hover:text-slate-900 dark:hover:text-white transition-colors">Changelog</a></li>
               </ul>
             </div>
           </div>

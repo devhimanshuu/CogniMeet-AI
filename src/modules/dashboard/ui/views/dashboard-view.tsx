@@ -19,7 +19,15 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { GeneratedAvatar } from "@/components/generated-avatar";
 
-const StatCard = ({ title, value, icon: Icon, trend, color }: any) => (
+interface StatCardProps {
+  title: string;
+  value: string | number;
+  icon: React.ElementType;
+  trend?: string;
+  color: string;
+}
+
+const StatCard = ({ title, value, icon: Icon, trend, color }: StatCardProps) => (
   <div className="glass-card p-6 relative overflow-hidden group hover-lift">
     <div className={`absolute top-0 right-0 w-32 h-32 opacity-10 rounded-bl-full transition-transform group-hover:scale-110 ${color}`} />
     <div className="flex justify-between items-start mb-4 relative z-10">
@@ -40,22 +48,26 @@ const StatCard = ({ title, value, icon: Icon, trend, color }: any) => (
 
 export const DashboardView = () => {
   const trpc = useTRPC();
-  
+
   const { data: meetingsData, isLoading: isLoadingMeetings } = useQuery(
-    trpc.meetings.getMany.queryOptions({ limit: 5 })
+    trpc.meetings.getMany.queryOptions({ pageSize: 5 })
   );
-  
+
   const { data: agentsData, isLoading: isLoadingAgents } = useQuery(
-    trpc.agents.getMany.queryOptions()
+    trpc.agents.getMany.queryOptions({})
   );
 
-  const totalMeetings = meetingsData?.pages[0]?.nextCursor 
-    ? "5+" 
-    : (meetingsData?.pages[0]?.items.length || 0);
+  const { data: stats, isLoading: isLoadingStats } = useQuery(
+    trpc.meetings.getStats.queryOptions()
+  );
 
-  const totalAgents = agentsData?.pages[0]?.items.length || 0;
-  
-  const recentMeetings = meetingsData?.pages[0]?.items || [];
+  const totalMeetings = stats?.totalMeetings ?? 0;
+  const totalAgents = agentsData?.total ?? 0;
+  const totalActionItems = stats?.totalActionItems ?? 0;
+  const hoursSaved = stats?.hoursSaved ?? 0;
+  const avgScore = stats?.avgScore ?? 0;
+
+  const recentMeetings = meetingsData?.items || [];
 
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-8 gradient-bg-mesh">
@@ -88,10 +100,10 @@ export const DashboardView = () => {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard title="Total Meetings" value={isLoadingMeetings ? "-" : totalMeetings} icon={VideoIcon} color="bg-emerald-500" trend="+12%" />
+          <StatCard title="Total Meetings" value={isLoadingStats ? "-" : totalMeetings} icon={VideoIcon} color="bg-emerald-500" />
           <StatCard title="Active Agents" value={isLoadingAgents ? "-" : totalAgents} icon={BotIcon} color="bg-cyan-500" />
-          <StatCard title="Action Items" value="14" icon={ZapIcon} color="bg-amber-500" />
-          <StatCard title="Hours Saved" value="12.5" icon={ClockIcon} color="bg-violet-500" trend="+2.5h" />
+          <StatCard title="Action Items" value={isLoadingStats ? "-" : totalActionItems} icon={ZapIcon} color="bg-amber-500" />
+          <StatCard title="Hours Recorded" value={isLoadingStats ? "-" : hoursSaved} icon={ClockIcon} color="bg-violet-500" />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -155,20 +167,42 @@ export const DashboardView = () => {
               </h3>
             </div>
             <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-              <div className="relative w-40 h-40 mb-6">
-                <div className="absolute inset-0 rounded-full border-8 border-secondary" />
-                <div 
-                  className="absolute inset-0 rounded-full border-8 border-cyan-400 border-t-transparent border-r-transparent rotate-45 transition-all duration-1000"
-                  style={{ strokeDasharray: "280", strokeDashoffset: "70" }}
-                />
+              <div className="relative w-40 h-40 mb-6 flex items-center justify-center">
+                <svg className="absolute inset-0 w-full h-full transform -rotate-90">
+                  <circle
+                    cx="80"
+                    cy="80"
+                    r="72"
+                    stroke="currentColor"
+                    strokeWidth="8"
+                    fill="transparent"
+                    className="text-secondary"
+                  />
+                  <circle
+                    cx="80"
+                    cy="80"
+                    r="72"
+                    stroke="currentColor"
+                    strokeWidth="8"
+                    fill="transparent"
+                    className="text-cyan-400 transition-all duration-1000"
+                    strokeDasharray="452.39"
+                    strokeDashoffset={452.39 - (452.39 * avgScore) / 100}
+                    strokeLinecap="round"
+                  />
+                </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-4xl font-bold gradient-text">85</span>
+                  <span className="text-4xl font-bold gradient-text">{isLoadingStats ? "-" : avgScore}</span>
                   <span className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Out of 100</span>
                 </div>
               </div>
-              <h4 className="font-semibold text-lg mb-2">Excellent Meeting Health</h4>
+              <h4 className="font-semibold text-lg mb-2">
+                {avgScore >= 70 ? "Excellent Meeting Health" : avgScore >= 40 ? "Good Meeting Health" : avgScore > 0 ? "Needs Improvement" : "No Data Yet"}
+              </h4>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Your recent meetings have high decision density and clear action items. Keep it up!
+                {avgScore > 0
+                  ? "Based on decision density and action items across your completed meetings."
+                  : "Complete a meeting to see your productivity score here."}
               </p>
             </div>
           </div>

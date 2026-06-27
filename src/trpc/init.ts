@@ -8,10 +8,8 @@ import { initTRPC, TRPCError } from '@trpc/server';
 import { count, eq } from 'drizzle-orm';
 import { cache } from 'react';
 export const createTRPCContext = cache(async () => {
-  /**
-   * @see: https://trpc.io/docs/server/context
-   */
-  return { userId: 'user_123' };
+  const { userId } = await auth();
+  return { userId };
 });
 // Avoid exporting the entire t-object
 // since it's not very descriptive.

@@ -379,8 +379,14 @@
   opacity: 1;
 }
 
-/* Remove Clerk Watermark/Branding */
+/* Remove Clerk Watermark/Branding and Development Mode Badge */
 .cl-branding,
+.cl-internal-17x45,
+.cl-internal-1,
+.cl-internal-2,
+.cl-internal-3,
+.cl-internal-development-mode-warning,
+.cl-developmentModeIndicator,
 [class*="cl-"] *:has(> a[href*="clerk.com"]),
 [class*="cl-"] *:has(> a[aria-label*="Clerk"]),
 [class*="cl-"] *:has(> a[href*="accounts.clerk.com"]) {
