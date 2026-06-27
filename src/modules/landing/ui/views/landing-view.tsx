@@ -914,8 +914,8 @@ export const LandingView = () => {
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-emerald-500/10 blur-[120px] rounded-full pointer-events-none" />
         
         {/* Big Background Text */}
-        <div className="absolute top-[40%] left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none w-full flex justify-center z-0 overflow-hidden">
-          <span className="text-[15vw] font-black text-slate-900/5 dark:text-white/[0.03] tracking-tighter uppercase whitespace-nowrap select-none">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none w-full flex justify-center z-0 overflow-hidden">
+          <span className="text-[18vw] font-black tracking-tighter uppercase whitespace-nowrap select-none bg-gradient-to-b from-slate-900/10 to-slate-900/0 dark:from-white/10 dark:to-white/0 bg-clip-text text-transparent">
             COGNIMEET
           </span>
         </div>
