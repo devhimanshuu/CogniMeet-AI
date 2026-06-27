@@ -19,7 +19,7 @@ export default function TermsOfServicePage() {
           <section>
             <h2 className="text-2xl font-semibold mb-4 text-slate-900 dark:text-white">1. Agreement to Terms</h2>
             <p className="leading-relaxed text-slate-600 dark:text-slate-300">
-              These Terms of Service constitute a legally binding agreement made between you, whether personally or on behalf of an entity ("you") and CogniMeet.AI ("Company", "we", "us", or "our"), concerning your access to and use of our website as well as any other media form, media channel, mobile website or mobile application related, linked, or otherwise connected thereto.
+              These Terms of Service constitute a legally binding agreement made between you, whether personally or on behalf of an entity (&quot;you&quot;) and CogniMeet.AI (&quot;Company&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;), concerning your access to and use of our website as well as any other media form, media channel, mobile website or mobile application related, linked, or otherwise connected thereto.
             </p>
           </section>
           

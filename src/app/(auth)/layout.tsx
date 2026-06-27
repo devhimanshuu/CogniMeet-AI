@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { SparklesIcon, BotIcon, ShieldCheckIcon, ZapIcon } from "lucide-react";
+import { BotIcon, ShieldCheckIcon, ZapIcon } from "lucide-react";
 
 interface Props {
   children: React.ReactNode;

@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Agent not found" }, { status: 404 });
     }
 
-    const call = streamVideo.video.call("default", meetingId);
+    streamVideo.video.call("default", meetingId);
     
     // The agent will respond via the post-meeting chat with full context.
     // Audio processing is handled by Stream Video and webhook transcription.

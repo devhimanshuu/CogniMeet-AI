@@ -226,7 +226,7 @@ export const LandingView = () => {
       {/* ═══ FEATURES ═══ */}
       <section id="features" className="py-32 px-6 relative">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-emerald-500/5 to-transparent pointer-events-none" />
-        <div className="max-w-6xl mx-auto relative z-10">
+        <div className="w-full relative z-10">
           <div className="text-center mb-20">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold tracking-widest uppercase mb-6 animate-slide-up">
               <SparklesIcon className="size-3" /> Features
@@ -474,7 +474,7 @@ export const LandingView = () => {
       {/* ═══ HOW IT WORKS ═══ */}
       <section id="how-it-works" className="py-32 px-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/5 to-transparent pointer-events-none" />
-        <div className="max-w-6xl mx-auto relative z-10">
+        <div className="w-full relative z-10">
           <div className="text-center mb-24">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-bold tracking-widest uppercase mb-6 animate-slide-up">
               <ZapIcon className="size-3" /> How It Works
@@ -784,7 +784,7 @@ export const LandingView = () => {
       {/* ═══ PRICING ═══ */}
       <section id="pricing" className="py-32 px-6 relative">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-amber-500/5 to-transparent pointer-events-none" />
-        <div className="max-w-5xl mx-auto relative z-10">
+        <div className="w-full relative z-10">
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold tracking-widest uppercase mb-6 animate-slide-up">
               Pricing Plans
@@ -820,7 +820,7 @@ export const LandingView = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-7xl mx-auto">
             <PricingCard
               delay={0.2}
               title="Free Plan"
@@ -860,8 +860,8 @@ export const LandingView = () => {
 
       {/* ═══ CTA ═══ */}
       <section className="py-32 px-6 relative overflow-hidden">
-        <div className="absolute inset-0 bg-emerald-500/5 blur-[150px] rounded-full max-w-4xl mx-auto" />
-        <div className="max-w-4xl mx-auto text-center relative z-10 animate-slide-up" style={{ animationDelay: "0.2s" }}>
+        <div className="absolute inset-0 bg-emerald-500/5 blur-[150px] rounded-full w-full mx-auto" />
+        <div className="w-full text-center relative z-10 animate-slide-up" style={{ animationDelay: "0.2s" }}>
 
           {/* Glowing cursor tracking card */}
           <div
@@ -920,7 +920,7 @@ export const LandingView = () => {
           </span>
         </div>
 
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
+        <div className="w-full px-8 md:px-12 relative z-10">
           <div className="grid grid-cols-2 md:grid-cols-12 gap-12 mb-20">
             {/* Branding Column */}
             <div className="col-span-2 md:col-span-5 space-y-6">
