@@ -146,7 +146,7 @@ export const LandingView = () => {
   };
 
   return (
-    <div className="min-h-screen gradient-bg-mesh text-foreground">
+    <div className="min-h-screen w-full overflow-x-hidden gradient-bg-mesh text-foreground">
       <LandingNavbar />
 
       {/* ═══ HERO ═══ */}
@@ -908,10 +908,17 @@ export const LandingView = () => {
       </section>
 
       {/* ═══ FOOTER ═══ */}
-      <footer className="relative border-t border-black/5 dark:border-white/5 bg-slate-50 dark:bg-[#030614] pt-24 pb-12 overflow-hidden">
+      <footer className="relative border-t border-black/5 dark:border-white/5 bg-slate-50 dark:bg-[#030614] pt-24 pb-12 overflow-hidden flex flex-col items-center">
         {/* Decorative background elements */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-[1px] bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent" />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-emerald-500/10 blur-[120px] rounded-full pointer-events-none" />
+        
+        {/* Big Background Text */}
+        <div className="absolute top-[40%] left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none w-full flex justify-center z-0 overflow-hidden">
+          <span className="text-[15vw] font-black text-slate-900/5 dark:text-white/[0.03] tracking-tighter uppercase whitespace-nowrap select-none">
+            COGNIMEET
+          </span>
+        </div>
 
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="grid grid-cols-2 md:grid-cols-12 gap-12 mb-20">
