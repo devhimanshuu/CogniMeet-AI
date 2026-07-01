@@ -111,6 +111,7 @@
   },
   "overrides": {
     "react": "$react",
-    "react-dom": "$react-dom"
+    "react-dom": "$react-dom",
+    "@openai/realtime-api-beta": "git+https://github.com/openai/openai-realtime-api-beta.git#a5cb94824f625423858ebacb9f769226ca98945f"
   }
 }
