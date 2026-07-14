@@ -1,13 +1,39 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { BotIcon } from "lucide-react";
 import {
   CallControls,
   SpeakerLayout,
+  useCallStateHooks,
 } from "@stream-io/video-react-sdk";
 
 interface Props {
   onLeave: () => void;
   meetingName: string;
+};
+
+const AgentStatusBadge = () => {
+  const { useCallCustomData } = useCallStateHooks();
+  const custom = useCallCustomData();
+
+  const status = custom?.agentStatus as "joined" | "unavailable" | undefined;
+  const agentName = (custom?.agentName as string | undefined) ?? "AI agent";
+
+  if (!status) return null;
+
+  return status === "joined" ? (
+    <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
+      <BotIcon className="size-3.5" />
+      {agentName} in call
+    </span>
+  ) : (
+    <span className="flex items-center gap-1.5 text-xs font-medium text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-full">
+      <BotIcon className="size-3.5" />
+      AI agent unavailable
+    </span>
+  );
 };
 
 export const CallActive = ({ onLeave, meetingName }: Props) => {
@@ -23,6 +49,7 @@ export const CallActive = ({ onLeave, meetingName }: Props) => {
           {meetingName}
         </h4>
         <div className="ml-auto flex items-center gap-2">
+          <AgentStatusBadge />
         </div>
       </div>
       

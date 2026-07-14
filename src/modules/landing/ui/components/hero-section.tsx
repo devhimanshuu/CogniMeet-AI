@@ -40,7 +40,7 @@ export const HeroSection = ({ mounted, isSignedIn, isLoaded }: HeroSectionProps)
         <div className="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-slate-900/60 backdrop-blur-xl border border-white/10 shadow-2xl text-xs sm:text-sm mt-12 sm:mt-20 animate-slide-up pointer-events-auto">
           <SparklesIcon className="size-3.5 sm:size-4 text-emerald-400" />
           <span className="text-slate-300 font-medium">
-            Powered by AI Agents — Groq, ElevenLabs & More
+            Powered by AI Agents — OpenAI, Groq & More
           </span>
         </div>
 

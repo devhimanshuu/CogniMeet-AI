@@ -8,6 +8,7 @@ import {
   StarIcon,
   VideoIcon,
   LayoutDashboardIcon,
+  SearchIcon,
   SparklesIcon,
 } from "lucide-react";
 
@@ -32,7 +33,7 @@ const firstSection = [
   {
     icon: LayoutDashboardIcon,
     label: "Dashboard",
-    href: "/",
+    href: "/dashboard",
   },
   {
     icon: VideoIcon,
@@ -43,6 +44,11 @@ const firstSection = [
     icon: BotIcon,
     label: "Agents",
     href: "/agents",
+  },
+  {
+    icon: SearchIcon,
+    label: "AI Search",
+    href: "/search",
   },
 ];
 

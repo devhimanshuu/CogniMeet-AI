@@ -25,8 +25,8 @@ export const ProvidersSection = () => {
     },
     {
       key: "elevenlabs",
-      name: "ElevenLabs",
-      role: "Voice Synthesis",
+      name: "OpenAI",
+      role: "Realtime Voice",
       latency: "18ms",
       state: "Active Audio",
       color: "border-violet-500/20 hover:border-violet-500/40 text-violet-400 bg-violet-500/5",
@@ -55,8 +55,8 @@ export const ProvidersSection = () => {
       color: "from-cyan-500/20 to-cyan-500/5 border-cyan-500/20 text-cyan-400",
     },
     {
-      name: "ElevenLabs",
-      role: "Voice AI",
+      name: "OpenAI",
+      role: "Realtime Voice",
       details: "Active Audio • 18ms",
       color: "from-violet-500/20 to-violet-500/5 border-violet-500/20 text-violet-400",
     },

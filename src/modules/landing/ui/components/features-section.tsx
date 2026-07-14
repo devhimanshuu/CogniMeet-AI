@@ -296,7 +296,7 @@ export const FeaturesSection = () => {
               <div className="space-y-1.5 text-[10px] text-slate-800 dark:text-white">
                 <div className="flex justify-between text-slate-600 dark:text-white/60">
                   <span>Voice Model:</span>
-                  <span className="text-cyan-600 dark:text-cyan-400 font-mono">ElevenLabs v2</span>
+                  <span className="text-cyan-600 dark:text-cyan-400 font-mono">OpenAI Realtime</span>
                 </div>
                 <div className="w-full bg-black/10 dark:bg-white/5 rounded-full h-1">
                   <div className="bg-emerald-500 h-1 rounded-full" style={{ width: "85%" }} />

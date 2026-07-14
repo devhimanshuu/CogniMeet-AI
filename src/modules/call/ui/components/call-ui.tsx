@@ -24,7 +24,9 @@ export const CallUI = ({ meetingName }: Props) => {
   const handleLeave = () => {
     if (!call) return;
 
-    call.endCall();
+    // Leave rather than end: ending would kick every other participant.
+    // The webhook ends the call server-side once the last human leaves.
+    call.leave();
     setShow("ended");
   };
 

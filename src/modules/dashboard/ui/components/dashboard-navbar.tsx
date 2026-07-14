@@ -1,16 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PanelLeftCloseIcon, PanelLeftIcon, SearchIcon, BellIcon } from "lucide-react";
+import { PanelLeftCloseIcon, PanelLeftIcon, SearchIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
+import { NotificationsBell } from "@/modules/notifications/ui/components/notifications-bell";
 
 import { DashboardCommand } from "./dashboard-command";
 
 export const DashboardNavbar = () => {
   const { state, toggleSidebar, isMobile } = useSidebar();
   const [commandOpen, setCommandOpen] = useState(false);
+  const [isMac, setIsMac] = useState(false);
+
+  useEffect(() => {
+    setIsMac(navigator.userAgent.toUpperCase().includes("MAC"));
+  }, []);
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -47,19 +53,12 @@ export const DashboardNavbar = () => {
           <SearchIcon className="size-4" />
           Search
           <kbd className="ml-auto pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-border/50 bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
-            <span className="text-xs">&#8984;</span>K
+            {isMac ? <span className="text-xs">&#8984;</span> : <span>Ctrl</span>}K
           </kbd>
         </Button>
 
         <div className="ml-auto flex items-center gap-2">
-          {/* Notification Bell */}
-          <Button 
-            variant="outline" 
-            className="size-9 bg-secondary/50 border-border/50 hover:bg-secondary relative"
-          >
-            <BellIcon className="size-4" />
-            <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-500" />
-          </Button>
+          <NotificationsBell />
         </div>
       </nav>
     </>

@@ -145,7 +145,7 @@ export const HowItWorksSection = () => {
                         <div className="space-y-1.5">
                           <span className="text-slate-500 dark:text-white/60 block">Voice Synthesizer</span>
                           <div className="bg-black/5 dark:bg-[#0b0f19] border border-black/5 dark:border-white/5 rounded-lg p-2 text-slate-700 dark:text-white/70">
-                            ElevenLabs Bella v2
+                            OpenAI Realtime Voice
                           </div>
                         </div>
                         <div className="space-y-1.5">

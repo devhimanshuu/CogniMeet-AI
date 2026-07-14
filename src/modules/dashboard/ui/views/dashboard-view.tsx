@@ -13,6 +13,15 @@ import {
   ZapIcon
 } from "lucide-react";
 import { format } from "date-fns";
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 import { useTRPC } from "@/trpc/client";
 import { Button } from "@/components/ui/button";
@@ -31,7 +40,7 @@ const StatCard = ({ title, value, icon: Icon, trend, color }: StatCardProps) => 
   <div className="glass-card p-6 relative overflow-hidden group hover-lift">
     <div className={`absolute top-0 right-0 w-32 h-32 opacity-10 rounded-bl-full transition-transform group-hover:scale-110 ${color}`} />
     <div className="flex justify-between items-start mb-4 relative z-10">
-      <div className={`p-2 rounded-lg ${color} bg-opacity-10 backdrop-blur-sm border border-white/10`}>
+      <div className={`p-2 rounded-lg ${color} border border-white/10`}>
         <Icon className="size-5 text-white" />
       </div>
       {trend && (
@@ -64,8 +73,12 @@ export const DashboardView = () => {
   const totalMeetings = stats?.totalMeetings ?? 0;
   const totalAgents = agentsData?.total ?? 0;
   const totalActionItems = stats?.totalActionItems ?? 0;
-  const hoursSaved = stats?.hoursSaved ?? 0;
+  const hoursRecorded = stats?.hoursRecorded ?? 0;
   const avgScore = stats?.avgScore ?? 0;
+  const scoreTrend = (stats?.scoreTrend ?? []).map((item) => ({
+    ...item,
+    label: format(new Date(item.createdAt), "MMM d"),
+  }));
 
   const recentMeetings = meetingsData?.items || [];
 
@@ -103,7 +116,7 @@ export const DashboardView = () => {
           <StatCard title="Total Meetings" value={isLoadingStats ? "-" : totalMeetings} icon={VideoIcon} color="bg-emerald-500" />
           <StatCard title="Active Agents" value={isLoadingAgents ? "-" : totalAgents} icon={BotIcon} color="bg-cyan-500" />
           <StatCard title="Action Items" value={isLoadingStats ? "-" : totalActionItems} icon={ZapIcon} color="bg-amber-500" />
-          <StatCard title="Hours Recorded" value={isLoadingStats ? "-" : hoursSaved} icon={ClockIcon} color="bg-violet-500" />
+          <StatCard title="Hours Recorded" value={isLoadingStats ? "-" : hoursRecorded} icon={ClockIcon} color="bg-violet-500" />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -205,6 +218,70 @@ export const DashboardView = () => {
                   : "Complete a meeting to see your productivity score here."}
               </p>
             </div>
+          </div>
+        </div>
+
+        {/* Score Trend */}
+        <div className="glass-card flex flex-col">
+          <div className="p-6 border-b border-border/30 flex items-center justify-between">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <TrendingUpIcon className="size-5 text-emerald-400" />
+              Productivity Trend
+            </h3>
+            <span className="text-xs text-muted-foreground">Last {scoreTrend.length || 10} completed meetings</span>
+          </div>
+          <div className="p-6 h-[260px]">
+            {scoreTrend.length < 2 ? (
+              <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
+                Complete at least two meetings to see your score trend.
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={scoreTrend} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="scoreGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#34d399" stopOpacity={0.35} />
+                      <stop offset="100%" stopColor="#34d399" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                  <XAxis
+                    dataKey="label"
+                    tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    domain={[0, 100]}
+                    tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "var(--popover)",
+                      border: "1px solid var(--border)",
+                      borderRadius: "0.75rem",
+                      color: "var(--popover-foreground)",
+                      fontSize: 12,
+                    }}
+                    formatter={(value: number) => [`${value} / 100`, "Score"]}
+                    labelFormatter={(label, payload) =>
+                      payload?.[0]?.payload?.name ?? label
+                    }
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="score"
+                    stroke="#34d399"
+                    strokeWidth={2}
+                    fill="url(#scoreGradient)"
+                    dot={{ r: 3, fill: "#34d399", strokeWidth: 0 }}
+                    activeDot={{ r: 5 }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 
