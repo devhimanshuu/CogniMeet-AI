@@ -230,16 +230,6 @@ A few implementation decisions worth calling out:
 - **The AI never replies to itself** — chat events from the agent's own user ID are dropped, and per-channel rate limiting (10 replies/min) caps LLM spend.
 - **Everything degrades gracefully** — no `OPENAI_API_KEY` means no live agent or semantic search, but calls, transcription, and summaries keep working; Resend and Sentry are similarly opt-in.
 
-## Deployment
-
-The app is ready to deploy on [Vercel](https://vercel.com):
-
-1. Push to GitHub
-2. Import in Vercel
-3. Set all environment variables (update `NEXT_PUBLIC_APP_URL` to your production domain)
-4. Enable pgvector on the production database (`CREATE EXTENSION IF NOT EXISTS vector;`) and run `npm run db:push` against it
-5. Connect the [Inngest Vercel integration](https://www.inngest.com/docs/deploy/vercel) so background jobs run in production
-6. Update webhook URLs in the Stream (Video + Chat) and Clerk dashboards to point to your production domain
 
 ## License
 
