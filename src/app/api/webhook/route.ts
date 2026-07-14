@@ -1,6 +1,5 @@
 import { and, eq, not } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
-import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 import {
   MessageNewEvent,
   CallEndedEvent,
@@ -14,9 +13,6 @@ import { db } from "@/db";
 import { agents, meetings } from "@/db/schema";
 import { streamVideo } from "@/lib/stream-video";
 import { inngest } from "@/inngest/client";
-import { generateAvatarUri } from "@/lib/avatar";
-import { streamChat } from "@/lib/stream-chat";
-import { generateTextWithFallback } from "@/lib/ai-clients";
 
 function verifySignatureWithSDK(body: string, signature: string): boolean {
   return streamVideo.verifyWebhook(body, signature);
@@ -90,6 +86,49 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Agent not found" }, { status: 404 });
     }
 
+    // Bring the AI agent into the live call. Stream bridges the OpenAI
+    // Realtime session server-side, so the agent stays in the call after
+    // this request finishes.
+    const call = streamVideo.video.call("default", meetingId);
+    let agentStatus: "joined" | "unavailable" = "unavailable";
+
+    if (process.env.OPENAI_API_KEY) {
+      try {
+        const realtimeClient = await streamVideo.video.connectOpenAi({
+          call,
+          openAiApiKey: process.env.OPENAI_API_KEY,
+          agentUserId: existingAgent.id,
+        });
+
+        realtimeClient.updateSession({
+          instructions: existingAgent.instructions,
+        });
+
+        agentStatus = "joined";
+      } catch (error) {
+        // The meeting must still work as a plain recorded call even if the
+        // live agent fails to connect.
+        console.error("[Webhook] Failed to connect live AI agent:", error);
+      }
+    } else {
+      console.warn(
+        "[Webhook] OPENAI_API_KEY is not set - the AI agent will not join the live call."
+      );
+    }
+
+    // Surface the agent's status to participants via call custom data
+    try {
+      await call.update({
+        custom: {
+          ...event.call.custom,
+          agentStatus,
+          agentName: existingAgent.name,
+        },
+      });
+    } catch (error) {
+      console.error("[Webhook] Failed to update call custom data:", error);
+    }
+
   } else if (eventType === "call.session_participant_left") {
     const event = payload as CallSessionParticipantLeftEvent;
     const meetingId = event.call_cid.split(":")[1];
@@ -98,12 +137,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing meetingId" }, { status: 400 });
     }
 
-    const call = streamVideo.video.call("default", meetingId);
-    const callState = await call.get();
-    const participantCount = callState.call.session?.participants?.length ?? 0;
+    try {
+      const call = streamVideo.video.call("default", meetingId);
+      const callState = await call.get();
+      const participants = callState.call.session?.participants ?? [];
 
-    if (participantCount <= 1) {
-      await call.end();
+      // End the call once no humans remain (the AI agent may still be
+      // "present" as a participant).
+      const humanParticipants = participants.filter(
+        (participant) => participant.user_session_id !== event.participant.user_session_id
+      );
+
+      if (humanParticipants.length <= 1) {
+        await call.end();
+      }
+    } catch (error) {
+      // The call may already be over; don't 500 or Stream will retry.
+      console.error("[Webhook] Failed to check/end call on participant leave:", error);
     }
   } else if (eventType === "call.session_ended") {
     const event = payload as CallEndedEvent;
@@ -167,109 +217,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const [existingMeeting] = await db
-      .select()
-      .from(meetings)
-      .where(and(eq(meetings.id, channelId), eq(meetings.status, "completed")));
-
-    if (!existingMeeting) {
-      return NextResponse.json({ error: "Meeting not found" }, { status: 404 });
-    }
-
-    const [existingAgent] = await db
-      .select()
-      .from(agents)
-      .where(eq(agents.id, existingMeeting.agentId));
-
-    if (!existingAgent) {
-      return NextResponse.json({ error: "Agent not found" }, { status: 404 });
-    }
-
-    if (userId !== existingAgent.id) {
-      const instructions = `
-      You are an AI assistant helping the user revisit a recently completed meeting.
-      Below is a summary of the meeting, generated from the transcript:
-      
-      ${existingMeeting.summary}
-      
-      The following are your original instructions from the live meeting assistant. Please continue to follow these behavioral guidelines as you assist the user:
-      
-      ${existingAgent.instructions}
-      
-      The user may ask questions about the meeting, request clarifications, or ask for follow-up actions.
-      Always base your responses on the meeting summary above.
-      
-      You also have access to the recent conversation history between you and the user. Use the context of previous messages to provide relevant, coherent, and helpful responses. If the user's question refers to something discussed earlier, make sure to take that into account and maintain continuity in the conversation.
-      
-      If the summary does not contain enough information to answer a question, politely let the user know.
-      
-      Be concise, helpful, and focus on providing accurate information from the meeting and the ongoing conversation.
-      `;
-
-      const channel = streamChat.channel("messaging", channelId);
-      await channel.watch();
-
-      const previousMessages = channel.state.messages
-        .slice(-5)
-        .filter((msg) => msg.text && msg.text.trim() !== "")
-        .map<ChatCompletionMessageParam>((message) => ({
-          role: message.user?.id === existingAgent.id ? "assistant" : "user",
-          content: message.text || "",
-        }));
-
-      // Tavily Web Search — triggered for factual/research questions
-      let webSearchContext = "";
-      const searchTriggers = ["search", "look up", "find", "what is", "who is", "latest", "current", "how to", "compare"];
-      const shouldSearch = searchTriggers.some(trigger => text.toLowerCase().includes(trigger));
-      
-      if (shouldSearch) {
-        try {
-          const { searchWeb } = await import("@/lib/tavily");
-          const searchResults = await searchWeb(text, 3);
-          if (searchResults.results.length > 0) {
-            webSearchContext = `\n\nWeb Search Results (use these to provide up-to-date information):\n${
-              searchResults.results.map(r => `- ${r.title}: ${r.content.substring(0, 200)}`).join("\n")
-            }${searchResults.answer ? `\n\nSearch Summary: ${searchResults.answer}` : ""}`;
-          }
-        } catch (searchError) {
-          console.error("[Tavily] Web search failed in chat:", searchError);
-        }
-      }
-
-      const enrichedInstructions = instructions + webSearchContext;
-
-      const GPTResponseText = await generateTextWithFallback(
-        [...previousMessages, { role: "user", content: text }],
-        enrichedInstructions
-      );
-
-      if (!GPTResponseText) {
-        return NextResponse.json(
-          { error: "No response from AI" },
-          { status: 400 }
-        );
-      }
-
-      const avatarUrl = generateAvatarUri({
-        seed: existingAgent.name,
-        variant: "botttsNeutral",
-      });
-
-      await streamChat.upsertUser({
-        id: existingAgent.id,
-        name: existingAgent.name,
-        image: avatarUrl,
-      });
-
-      await channel.sendMessage({
-        text: GPTResponseText,
-        user: {
-          id: existingAgent.id,
-          name: existingAgent.name,
-          image: avatarUrl,
-        },
-      });
-    }
+    // Generating the AI reply can take many seconds (LLM + optional web
+    // search), which risks webhook timeouts and duplicate replies on
+    // retries. Offload it to Inngest and acknowledge immediately.
+    await inngest.send({
+      name: "chat/agent-response",
+      data: {
+        channelId,
+        messageText: text,
+        senderId: userId,
+      },
+    });
   }
 
   return NextResponse.json({ status: "ok" });

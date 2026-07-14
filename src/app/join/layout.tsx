@@ -4,8 +4,7 @@ interface Props {
 
 const Layout = ({ children }: Props) => {
   return (
-    // Force dark tokens: the call UI is designed dark regardless of the
-    // user's theme preference.
+    // Guest call surface is dark, same as the authenticated call view
     <div className="dark h-screen bg-black">
       {children}
     </div>

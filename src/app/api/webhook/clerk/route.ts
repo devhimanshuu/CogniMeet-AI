@@ -54,10 +54,12 @@ export async function POST(req: Request) {
     await db.insert(user).values({
       id,
       name,
-      email: email || '',
+      // email is unique - a shared empty fallback would collide on the
+      // second passwordless/OAuth user without an address
+      email: email || `${id}@users.cognimeet.local`,
       image: image_url,
       emailVerified: true,
-    })
+    }).onConflictDoNothing()
 
     if (email) {
       try {
@@ -79,7 +81,8 @@ export async function POST(req: Request) {
 
     await db.update(user).set({
       name,
-      email: email || '',
+      // Never overwrite a stored email with an empty value
+      ...(email ? { email } : {}),
       image: image_url,
       updatedAt: new Date()
     }).where(eq(user.id, id))
