@@ -34,9 +34,15 @@ export const MeetingIdView = ({ meetingId }: Props) => {
     "The following action will remove this meeting"
   );
 
-  const { data } = useSuspenseQuery(
-    trpc.meetings.getOne.queryOptions({ id: meetingId }),
-  );
+  const { data } = useSuspenseQuery({
+    ...trpc.meetings.getOne.queryOptions({ id: meetingId }),
+    // Live-update while the meeting is in flight so "processing" flips to
+    // "completed" without a manual refresh once the AI summary lands.
+    refetchInterval: (query) => {
+      const status = query.state.data?.status;
+      return status === "active" || status === "processing" ? 5000 : false;
+    },
+  });
 
   const removeMeeting = useMutation(
     trpc.meetings.remove.mutationOptions({

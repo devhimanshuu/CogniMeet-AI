@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import Markdown from "react-markdown";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   SparklesIcon,
   FileTextIcon,
@@ -16,8 +19,12 @@ import { GeneratedAvatar } from "@/components/generated-avatar";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+import { useTRPC } from "@/trpc/client";
+
 import { MeetingGetOne } from "../../types";
+import { parseActionItems, parseStringList } from "../../utils";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { formatDuration } from "@/lib/utils";
 import { Transcript } from "./transcript";
 import { ChatProvider } from "./chat-provider";
@@ -27,6 +34,22 @@ interface Props {
 }
 
 export const CompletedState = ({ data }: Props) => {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+
+  const actionItems = parseActionItems(data.actionItems);
+  const keyDecisions = parseStringList(data.keyDecisions);
+
+  const toggleActionItem = useMutation(
+    trpc.meetings.toggleActionItem.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries(
+          trpc.meetings.getOne.queryOptions({ id: data.id }),
+        );
+      },
+    }),
+  );
+
   return (
     <div className="flex flex-col gap-y-4 animate-fade-in">
       <Tabs defaultValue="summary">
@@ -85,14 +108,29 @@ export const CompletedState = ({ data }: Props) => {
                 <CheckSquareIcon className="size-5" />
                 Action Items
               </h3>
-              {data.actionItems ? (
+              {actionItems.length > 0 ? (
                 <ul className="space-y-3">
-                  {JSON.parse(data.actionItems).map((item: string, i: number) => (
-                    <li key={i} className="flex items-start gap-2 text-muted-foreground bg-secondary/30 p-3 rounded-lg border border-border/50">
-                      <div className="mt-1 min-w-[16px]">
-                        <div className="size-4 rounded-sm border border-muted-foreground/50 bg-background" />
-                      </div>
-                      <span className="text-sm">{item}</span>
+                  {actionItems.map((item, i) => (
+                    <li key={i} className="flex items-start gap-3 text-muted-foreground bg-secondary/30 p-3 rounded-lg border border-border/50">
+                      <Checkbox
+                        id={`action-item-${i}`}
+                        className="mt-0.5"
+                        checked={item.done}
+                        disabled={toggleActionItem.isPending}
+                        onCheckedChange={(checked) =>
+                          toggleActionItem.mutate({
+                            id: data.id,
+                            index: i,
+                            done: checked === true,
+                          })
+                        }
+                      />
+                      <label
+                        htmlFor={`action-item-${i}`}
+                        className={`text-sm cursor-pointer ${item.done ? "line-through opacity-60" : ""}`}
+                      >
+                        {item.text}
+                      </label>
                     </li>
                   ))}
                 </ul>
@@ -105,9 +143,9 @@ export const CompletedState = ({ data }: Props) => {
                 <LightbulbIcon className="size-5" />
                 Key Decisions
               </h3>
-              {data.keyDecisions ? (
+              {keyDecisions.length > 0 ? (
                 <ul className="space-y-3">
-                  {JSON.parse(data.keyDecisions).map((item: string, i: number) => (
+                  {keyDecisions.map((item, i) => (
                     <li key={i} className="flex items-start gap-2 text-muted-foreground bg-secondary/30 p-3 rounded-lg border border-border/50">
                       <div className="mt-1 min-w-[16px]">
                         <div className="size-1.5 rounded-full bg-cyan-400 mt-1" />

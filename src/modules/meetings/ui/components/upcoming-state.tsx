@@ -4,6 +4,8 @@ import { VideoIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { EmptyState } from "@/components/empty-state"
 
+import { CopyInviteButton } from "./copy-invite-button"
+
 interface Props {
   meetingId: string;
 }
@@ -19,6 +21,7 @@ export const UpcomingState = ({
         description="Once you start this meeting, a summary will appear here"
       />
       <div className="flex flex-col-reverse lg:flex-row lg:justify-center items-center gap-2 w-full">
+        <CopyInviteButton meetingId={meetingId} />
         <Button asChild className="w-full lg:w-auto">
           <Link href={`/call/${meetingId}`}>
             <VideoIcon />

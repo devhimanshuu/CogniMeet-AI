@@ -1,7 +1,8 @@
 import { eq, count } from "drizzle-orm";
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import { db } from "@/db";
-import { polarClient } from "@/lib/polar";
+import { getCustomerStateSafe, getOrCreateCustomer, polarClient } from "@/lib/polar";
 import { agents, meetings } from "@/db/schema";
 import {
   createTRPCRouter,
@@ -10,11 +11,9 @@ import {
 
 export const premiumRouter = createTRPCRouter({
   getCurrentSubscription: protectedProcedure.query(async ({ ctx }) => {
-    const customer = await polarClient.customers.getStateExternal({
-      externalId: ctx.auth.user.id,
-    });
+    const customer = await getCustomerStateSafe(ctx.auth.user.id);
 
-    const subscription = customer.activeSubscriptions[0];
+    const subscription = customer?.activeSubscriptions[0];
 
     if (!subscription) {
       return null;
@@ -36,11 +35,9 @@ export const premiumRouter = createTRPCRouter({
     return products.result.items;
   }),
   getFreeUsage: protectedProcedure.query(async ({ ctx }) => {
-    const customer = await polarClient.customers.getStateExternal({
-      externalId: ctx.auth.user.id,
-    });
+    const customer = await getCustomerStateSafe(ctx.auth.user.id);
 
-    const subscription = customer.activeSubscriptions[0];
+    const subscription = customer?.activeSubscriptions[0];
 
     if (subscription) {
       return null;
@@ -68,23 +65,43 @@ export const premiumRouter = createTRPCRouter({
   createCheckout: protectedProcedure
     .input(z.object({ productId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const customer = await polarClient.customers.getStateExternal({
-        externalId: ctx.auth.user.id,
-      });
-      const checkout = await polarClient.checkouts.create({
-        products: [input.productId],
-        customerId: customer.id,
-        successUrl: `${process.env.NEXT_PUBLIC_APP_URL}/upgrade`,
-      });
-      return checkout.url;
+      try {
+        const customer = await getOrCreateCustomer({
+          externalId: ctx.auth.user.id,
+          email: ctx.auth.user.email,
+          name: ctx.auth.user.name,
+        });
+        const checkout = await polarClient.checkouts.create({
+          products: [input.productId],
+          customerId: customer.id,
+          successUrl: `${process.env.NEXT_PUBLIC_APP_URL}/upgrade`,
+        });
+        return checkout.url;
+      } catch (error) {
+        console.error("[Polar] Checkout creation failed:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Could not start checkout. Please try again later.",
+        });
+      }
     }),
   createPortalSession: protectedProcedure.mutation(async ({ ctx }) => {
-    const customer = await polarClient.customers.getStateExternal({
-      externalId: ctx.auth.user.id,
-    });
-    const session = await polarClient.customerSessions.create({
-      customerId: customer.id,
-    });
-    return session.customerPortalUrl;
+    try {
+      const customer = await getOrCreateCustomer({
+        externalId: ctx.auth.user.id,
+        email: ctx.auth.user.email,
+        name: ctx.auth.user.name,
+      });
+      const session = await polarClient.customerSessions.create({
+        customerId: customer.id,
+      });
+      return session.customerPortalUrl;
+    } catch (error) {
+      console.error("[Polar] Portal session creation failed:", error);
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Could not open the billing portal. Please try again later.",
+      });
+    }
   })
 });

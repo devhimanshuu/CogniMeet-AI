@@ -2,7 +2,7 @@ import { db } from '@/db';
 import { agents, meetings } from '@/db/schema';
 import { auth } from '@clerk/nextjs/server';
 import { user } from '@/db/schema';
-import { polarClient } from '@/lib/polar';
+import { getCustomerStateSafe, polarClient } from '@/lib/polar';
 import { MAX_FREE_AGENTS, MAX_FREE_MEETINGS } from '@/modules/premium/constants';
 import { initTRPC, TRPCError } from '@trpc/server';
 import { count, eq } from 'drizzle-orm';
@@ -39,7 +39,9 @@ export const protectedProcedure = baseProcedure.use(async ({ ctx, next }) => {
       const { clerkClient } = await import('@clerk/nextjs/server');
       const client = await clerkClient();
       const clerkUser = await client.users.getUser(userId);
-      const email = clerkUser.emailAddresses[0]?.emailAddress || "unknown@unknown.com";
+      // Placeholder must be unique per user: the email column has a unique
+      // constraint, so a shared fallback would break the second user.
+      const email = clerkUser.emailAddresses[0]?.emailAddress || `${userId}@users.cognimeet.local`;
       const name = clerkUser.fullName || "User";
 
       try {
@@ -68,9 +70,9 @@ export const protectedProcedure = baseProcedure.use(async ({ ctx, next }) => {
 });
 export const premiumProcedure = (entity: "meetings" | "agents") =>
   protectedProcedure.use(async ({ ctx, next }) => {
-    const customer = await polarClient.customers.getStateExternal({
-      externalId: ctx.auth.user.id,
-    });
+    // null (no Polar customer / Polar unavailable) means free tier - never
+    // block a user's core features on billing infrastructure.
+    const customer = await getCustomerStateSafe(ctx.auth.user.id);
 
     const [userMeetings] = await db
       .select({
@@ -86,7 +88,7 @@ export const premiumProcedure = (entity: "meetings" | "agents") =>
       .from(agents)
       .where(eq(agents.userId, ctx.auth.user.id));
 
-    const isPremium = customer.activeSubscriptions.length > 0;
+    const isPremium = (customer?.activeSubscriptions.length ?? 0) > 0;
     const isFreeAgentLimitReached = userAgents.count >= MAX_FREE_AGENTS;
     const isFreeMeetingLimitReached = userMeetings.count >= MAX_FREE_MEETINGS;
 

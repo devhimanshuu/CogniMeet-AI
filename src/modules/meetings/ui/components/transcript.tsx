@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { format } from "date-fns";
 import { SearchIcon } from "lucide-react";
 import Highlighter from "react-highlight-words";
 import { useQuery } from "@tanstack/react-query";
@@ -14,6 +13,18 @@ interface Props {
   meetingId: string;
 }
 
+const formatTimestamp = (ms: number) => {
+  const totalSeconds = Math.floor(ms / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  const pad = (n: number) => String(n).padStart(2, "0");
+
+  return hours > 0
+    ? `${hours}:${pad(minutes)}:${pad(seconds)}`
+    : `${pad(minutes)}:${pad(seconds)}`;
+};
+
 export const Transcript = ({ meetingId }: Props) => {
   const trpc = useTRPC();
   const { data } = useQuery(trpc.meetings.getTranscript.queryOptions({ id: meetingId }))
@@ -24,7 +35,7 @@ export const Transcript = ({ meetingId }: Props) => {
   );
 
   return (
-    <div className="bg-white rounded-lg border px-4 py-5 flex flex-col gap-y-4 w-full">
+    <div className="glass-card px-4 py-5 flex flex-col gap-y-4 w-full">
       <p className="text-sm font-medium">Transcript</p>
       <div className="relative">
         <Input
@@ -37,11 +48,11 @@ export const Transcript = ({ meetingId }: Props) => {
       </div>
       <ScrollArea>
         <div className="flex flex-col gap-y-4">
-          {filteredData.map((item) => {
+          {filteredData.map((item, index) => {
             return (
               <div
-                key={item.start_ts}
-                className="flex flex-col gap-y-2 hover:bg-muted p-4 rounded-md border"
+                key={`${item.speaker_id}-${item.start_ts}-${index}`}
+                className="flex flex-col gap-y-2 hover:bg-secondary/50 p-4 rounded-md border border-border/50 bg-secondary/20 transition-colors"
               >
                 <div className="flex gap-x-2 items-center">
                   <Avatar className="size-6">
@@ -51,16 +62,13 @@ export const Transcript = ({ meetingId }: Props) => {
                     />
                   </Avatar>
                   <p className="text-sm font-medium">{item.user.name}</p>
-                  <p className="text-sm text-blue-500 font-medium">
-                    {format(
-                      new Date(0, 0, 0, 0, 0, 0, item.start_ts),
-                      "mm:ss"
-                    )}
+                  <p className="text-sm text-cyan-400 font-medium">
+                    {formatTimestamp(item.start_ts)}
                   </p>
                 </div>
                 <Highlighter
-                  className="text-sm text-neutral-700"
-                  highlightClassName="bg-yellow-200"
+                  className="text-sm text-muted-foreground"
+                  highlightClassName="bg-amber-400/40 text-foreground rounded-sm px-0.5"
                   searchWords={[searchQuery]}
                   autoEscape={true}
                   textToHighlight={item.text}

@@ -1,8 +1,9 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { SparklesIcon, CalendarClockIcon, AlertCircleIcon } from "lucide-react";
+import { SparklesIcon, CalendarClockIcon, AlertCircleIcon, CheckIcon } from "lucide-react";
 import { MeetingStatus } from "@/modules/meetings/types";
+import { parseActionItems } from "@/modules/meetings/utils";
 import { useTRPC } from "@/trpc/client";
 
 interface Props {
@@ -27,6 +28,8 @@ export const PreMeetingBriefing = ({ agent }: Props) => {
   );
 
   const lastMeeting = data?.items?.[0];
+  const previousActionItems = parseActionItems(lastMeeting?.actionItems);
+  const openActionItems = previousActionItems.filter((item) => !item.done);
 
   return (
     <div className="glass-card overflow-hidden glow-border relative mt-6">
@@ -66,14 +69,31 @@ export const PreMeetingBriefing = ({ agent }: Props) => {
             <div className="space-y-4">
               <h4 className="text-sm font-semibold flex items-center gap-2 text-amber-400">
                 <AlertCircleIcon className="size-4" />
-                Previous Action Items
+                {openActionItems.length > 0 ? "Open Action Items" : "Previous Action Items"}
               </h4>
-              <ul className="space-y-3">
-                <li className="flex items-start gap-3 p-3 rounded-lg border border-border/50 bg-secondary/30">
-                  <div className="mt-0.5 size-4 rounded-sm border border-amber-500/50 flex items-center justify-center bg-amber-500/10" />
-                  <span className="text-sm text-muted-foreground">Please review the full summary of the last meeting for specific action items.</span>
-                </li>
-              </ul>
+              {previousActionItems.length === 0 ? (
+                <p className="text-sm text-muted-foreground p-3 rounded-lg border border-border/50 bg-secondary/30">
+                  No action items were extracted from your last meeting.
+                </p>
+              ) : (
+                <ul className="space-y-3">
+                  {previousActionItems.slice(0, 5).map((item, i) => (
+                    <li key={i} className="flex items-start gap-3 p-3 rounded-lg border border-border/50 bg-secondary/30">
+                      <div className={`mt-0.5 size-4 rounded-sm border flex items-center justify-center ${item.done ? "border-emerald-500/50 bg-emerald-500/10" : "border-amber-500/50 bg-amber-500/10"}`}>
+                        {item.done && <CheckIcon className="size-3 text-emerald-400" />}
+                      </div>
+                      <span className={`text-sm text-muted-foreground ${item.done ? "line-through opacity-60" : ""}`}>
+                        {item.text}
+                      </span>
+                    </li>
+                  ))}
+                  {previousActionItems.length > 5 && (
+                    <li className="text-xs text-muted-foreground pl-1">
+                      +{previousActionItems.length - 5} more in the last meeting&apos;s Insights tab
+                    </li>
+                  )}
+                </ul>
+              )}
             </div>
           </div>
         )}

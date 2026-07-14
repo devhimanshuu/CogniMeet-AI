@@ -18,9 +18,18 @@ export const MeetingsView = () => {
   const router = useRouter();
   const [filters, setFilters] = useMeetingsFilters();
 
-  const { data } = useSuspenseQuery(trpc.meetings.getMany.queryOptions({
-    ...filters,
-  }));
+  const { data } = useSuspenseQuery({
+    ...trpc.meetings.getMany.queryOptions({
+      ...filters,
+    }),
+    // Keep statuses fresh while any listed meeting is still in flight
+    refetchInterval: (query) => {
+      const hasInFlight = query.state.data?.items.some(
+        (item) => item.status === "active" || item.status === "processing",
+      );
+      return hasInFlight ? 10000 : false;
+    },
+  });
   
   return (
     <div className="flex-1 pb-4 px-4 md:px-8 flex flex-col gap-y-4">

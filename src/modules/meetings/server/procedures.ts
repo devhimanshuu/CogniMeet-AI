@@ -3,15 +3,18 @@ import JSONL from "jsonl-parse-stringify";
 import { TRPCError } from "@trpc/server";
 import { and, count, desc, eq, getTableColumns, ilike, inArray, sql } from "drizzle-orm";
 
+import { nanoid } from "nanoid";
+
 import { db } from "@/db";
 import { agents, meetings, user } from "@/db/schema";
 import { generateAvatarUri } from "@/lib/avatar";
 import { streamVideo } from "@/lib/stream-video";
-import { createTRPCRouter, premiumProcedure, protectedProcedure } from "@/trpc/init";
+import { baseProcedure, createTRPCRouter, premiumProcedure, protectedProcedure } from "@/trpc/init";
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, MIN_PAGE_SIZE } from "@/constants";
 
 import { MeetingStatus, StreamTranscriptItem } from "../types";
 import { meetingsInsertSchema, meetingsUpdateSchema } from "../schemas";
+import { parseActionItems } from "../utils";
 import { streamChat } from "@/lib/stream-chat";
 
 export const meetingsRouter = createTRPCRouter({
@@ -48,13 +51,27 @@ export const meetingsRouter = createTRPCRouter({
 
     let totalActionItems = 0;
     for (const row of actionItemRows) {
-      try {
-        const items = JSON.parse(row.actionItems || "[]");
-        totalActionItems += Array.isArray(items) ? items.length : 0;
-      } catch {
-        // skip malformed JSON
-      }
+      totalActionItems += parseActionItems(row.actionItems).length;
     }
+
+    const scoreTrend = await db
+      .select({
+        id: meetings.id,
+        name: meetings.name,
+        score: meetings.meetingScore,
+        createdAt: meetings.createdAt,
+      })
+      .from(meetings)
+      .where(
+        and(
+          eq(meetings.userId, ctx.auth.user.id),
+          eq(meetings.status, "completed"),
+          sql`${meetings.meetingScore} IS NOT NULL`,
+        )
+      )
+      .orderBy(desc(meetings.createdAt))
+      .limit(10)
+      .then((rows) => rows.reverse());
 
     const totalHours = Number(completedMeetings.totalDuration) / 3600;
     const avgScore = Math.round(Number(completedMeetings.avgScore));
@@ -62,15 +79,16 @@ export const meetingsRouter = createTRPCRouter({
     return {
       totalMeetings: meetingCount.count,
       totalActionItems,
-      hoursSaved: Math.round(totalHours * 10) / 10,
+      hoursRecorded: Math.round(totalHours * 10) / 10,
       avgScore,
+      scoreTrend,
     };
   }),
   generateChatToken: protectedProcedure.mutation(async ({ ctx }) => {
     const token = streamChat.createToken(ctx.auth.user.id);
     await streamChat.upsertUser({
       id: ctx.auth.user.id,
-      role: "admin",
+      role: "user",
     });
 
     return token;
@@ -92,16 +110,28 @@ export const meetingsRouter = createTRPCRouter({
         });
       }
 
-      if (!existingMeeting.transcriptUrl) {
-        return [];
+      let transcript: StreamTranscriptItem[] = [];
+
+      if (existingMeeting.transcript) {
+        // Preferred: the copy persisted at processing time (Stream's hosted
+        // transcript URL expires after a while)
+        try {
+          transcript = JSON.parse(existingMeeting.transcript);
+        } catch {
+          transcript = [];
+        }
+      } else if (existingMeeting.transcriptUrl) {
+        transcript = await fetch(existingMeeting.transcriptUrl)
+          .then((res) => res.text())
+          .then((text) => JSONL.parse<StreamTranscriptItem>(text))
+          .catch(() => {
+            return [];
+          });
       }
 
-      const transcript = await fetch(existingMeeting.transcriptUrl)
-        .then((res) => res.text())
-        .then((text) => JSONL.parse<StreamTranscriptItem>(text))
-        .catch(() => {
-          return [];
-        });
+      if (transcript.length === 0) {
+        return [];
+      }
 
       const speakerIds = [
         ...new Set(transcript.map((item) => item.speaker_id)),
@@ -165,13 +195,64 @@ export const meetingsRouter = createTRPCRouter({
 
       return transcriptWithSpeakers;
     }),
+  // Public: guests join via an unguessable meeting link without an account.
+  // Only meetings that haven't finished can be joined.
+  generateGuestToken: baseProcedure
+    .input(
+      z.object({
+        meetingId: z.string().min(1),
+        name: z.string().trim().min(1).max(50),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const [existingMeeting] = await db
+        .select({ id: meetings.id, name: meetings.name, status: meetings.status })
+        .from(meetings)
+        .where(eq(meetings.id, input.meetingId));
+
+      if (
+        !existingMeeting ||
+        (existingMeeting.status !== "upcoming" && existingMeeting.status !== "active")
+      ) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "This meeting is not available to join",
+        });
+      }
+
+      const guestId = `guest-${nanoid()}`;
+
+      await streamVideo.upsertUsers([
+        {
+          id: guestId,
+          name: input.name,
+          role: "user",
+          image: generateAvatarUri({ seed: input.name, variant: "initials" }),
+        },
+      ]);
+
+      const expirationTime = Math.floor(Date.now() / 1000) + 4 * 3600; // 4 hours
+      const issuedAt = Math.floor(Date.now() / 1000) - 60;
+
+      const token = streamVideo.generateUserToken({
+        user_id: guestId,
+        exp: expirationTime,
+        iat: issuedAt,
+      });
+
+      return {
+        token,
+        guestId,
+        meetingName: existingMeeting.name,
+      };
+    }),
   generateToken: protectedProcedure.mutation(async ({ ctx }) => {
     await streamVideo.upsertUsers([
       {
         id: ctx.auth.user.id,
         name: ctx.auth.user.name,
-        role: "admin",
-        image: 
+        role: "user",
+        image:
           ctx.auth.user.image ??
           generateAvatarUri({ seed: ctx.auth.user.name, variant: "initials" }),
       },
@@ -183,7 +264,7 @@ export const meetingsRouter = createTRPCRouter({
     const token = streamVideo.generateUserToken({
       user_id: ctx.auth.user.id,
       exp: expirationTime,
-      validity_in_seconds: issuedAt,
+      iat: issuedAt,
     });
 
     return token;
@@ -213,9 +294,40 @@ export const meetingsRouter = createTRPCRouter({
   update: protectedProcedure
     .input(meetingsUpdateSchema)
     .mutation(async ({ ctx, input }) => {
+      const [existingMeeting] = await db
+        .select({ status: meetings.status, agentId: meetings.agentId })
+        .from(meetings)
+        .where(
+          and(
+            eq(meetings.id, input.id),
+            eq(meetings.userId, ctx.auth.user.id),
+          )
+        );
+
+      if (!existingMeeting) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Meeting not found",
+        });
+      }
+
+      // Reassigning the agent after the fact would corrupt history: the
+      // summary, transcript, and post-meeting chat all belong to the
+      // original agent.
+      if (
+        input.agentId &&
+        input.agentId !== existingMeeting.agentId &&
+        existingMeeting.status !== "upcoming"
+      ) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "The agent can only be changed while the meeting is upcoming",
+        });
+      }
+
       const [updatedMeeting] = await db
         .update(meetings)
-        .set(input)
+        .set({ ...input, updatedAt: new Date() })
         .where(
           and(
             eq(meetings.id, input.id),
@@ -233,6 +345,59 @@ export const meetingsRouter = createTRPCRouter({
 
       return updatedMeeting;
     }),
+  toggleActionItem: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        index: z.number().int().min(0),
+        done: z.boolean(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const [existingMeeting] = await db
+        .select({ actionItems: meetings.actionItems })
+        .from(meetings)
+        .where(
+          and(
+            eq(meetings.id, input.id),
+            eq(meetings.userId, ctx.auth.user.id),
+          )
+        );
+
+      if (!existingMeeting) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Meeting not found",
+        });
+      }
+
+      const items = parseActionItems(existingMeeting.actionItems);
+
+      if (input.index >= items.length) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Action item not found",
+        });
+      }
+
+      items[input.index] = { ...items[input.index], done: input.done };
+
+      const [updatedMeeting] = await db
+        .update(meetings)
+        .set({
+          actionItems: JSON.stringify(items),
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(meetings.id, input.id),
+            eq(meetings.userId, ctx.auth.user.id),
+          )
+        )
+        .returning();
+
+      return updatedMeeting;
+    }),
   create: premiumProcedure("meetings")
     .input(meetingsInsertSchema)
     .mutation(async ({ input, ctx }) => {
@@ -243,28 +408,6 @@ export const meetingsRouter = createTRPCRouter({
           userId: ctx.auth.user.id,
         })
         .returning();
-
-      const call = streamVideo.video.call("default", createdMeeting.id);
-      await call.create({
-        data: {
-          created_by_id: ctx.auth.user.id,
-          custom: {
-            meetingId: createdMeeting.id,
-            meetingName: createdMeeting.name
-          },
-          settings_override: {
-            transcription: {
-              language: "en",
-              mode: "auto-on",
-              closed_caption_mode: "auto-on",
-            },
-            recording: {
-              mode: "auto-on",
-              quality: "1080p",
-            },
-          },
-        },
-      });
 
       const [existingAgent] = await db
         .select()
@@ -289,6 +432,34 @@ export const meetingsRouter = createTRPCRouter({
           }),
         },
       ]);
+
+      const call = streamVideo.video.call("default", createdMeeting.id);
+      await call.create({
+        data: {
+          created_by_id: ctx.auth.user.id,
+          // Register the owner and agent as members so call-level
+          // permissions can be scoped to membership
+          members: [
+            { user_id: ctx.auth.user.id },
+            { user_id: existingAgent.id },
+          ],
+          custom: {
+            meetingId: createdMeeting.id,
+            meetingName: createdMeeting.name
+          },
+          settings_override: {
+            transcription: {
+              language: "en",
+              mode: "auto-on",
+              closed_caption_mode: "auto-on",
+            },
+            recording: {
+              mode: "auto-on",
+              quality: "1080p",
+            },
+          },
+        },
+      });
 
       return createdMeeting;
     }),
